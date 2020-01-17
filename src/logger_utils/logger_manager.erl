@@ -27,8 +27,8 @@ run() ->
 terminate() ->
   try
     io:format("Stopping smoke receiver ~n"),
-    process_listener_PID() ! {delete, process_orchestrator:processes_set(), smoke_receiver},
-    process_listener_PID() ! {delete, process_orchestrator:processes_set(), smoke_receiver_listener}
+    process_listener_PID() ! {delete, smoke_receiver},
+    process_listener_PID() ! {delete, smoke_receiver_listener}
   catch
     error:_ -> log(logger,"Error while terminating alarm!"),
       error

@@ -23,6 +23,16 @@ initiate_app() ->
   spawn(fun() -> sensor_controller:run() end),
   timer:sleep(timer:seconds(1)).
 
+terminate_app() ->
+  spawn(fun() -> sensor_controller:terminate() end),
+  timer:sleep(timer:seconds(1)),
+
+  spawn(fun() -> receiver_controller:terminate() end),
+  timer:sleep(timer:seconds(1)),
+
+  spawn(fun() -> signal_proxy:terminate() end),
+  timer:sleep(timer:seconds(1)).
+
 
 
 

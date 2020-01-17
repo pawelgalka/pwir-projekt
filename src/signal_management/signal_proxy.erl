@@ -39,8 +39,9 @@ proxy_signal_receiver() ->
     {Name, Data} ->
       io:format("Proxy received data ~p ~p~n", [Name, Data]),
       case Name of
-        smoke_sensor -> receiver_controller_PID() ! {[smoke_receiver],Data};
-        temperature_sensor -> receiver_controller_PID() ! {[climate_control_receiver],Data}
+        smoke_sensor -> receiver_controller_PID() ! {[smoke_receiver,phone_notifier],Data};
+        temperature_sensor -> receiver_controller_PID() ! {[climate_control_receiver],Data};
+        _ -> receiver_controller_PID() ! {[security,phone_notifier,alarm],Data} %%one of alarms
 %%      phone_notification
       end,
       proxy_signal_receiver();

@@ -23,10 +23,20 @@ run() ->
     smoke_signal_exporter()
   catch
     A:B -> io:format("~s~s~n", [A, B]),
-      logger_PID() ! {smoke_sensor, "Error while creating electrical outlet receiver ~n"},
+      logger_PID() ! {smoke_sensor, "Error while creating smoke sensor ~n"},
       error
   end.
 
+terminate() ->
+  try
+    io:format("Stopping smoke sensor ~n"),
+    process_listener_PID() ! {delete, smoke_sensor},
+    smoke_signal_exporter()
+  catch
+    A:B -> io:format("~s~s~n", [A, B]),
+      logger_PID() ! {smoke_sensor, "Error while stopping smoke sensor ~n"},
+      error
+  end.
 
 smoke_signal_exporter() ->
   Random_output = rand:uniform(10),

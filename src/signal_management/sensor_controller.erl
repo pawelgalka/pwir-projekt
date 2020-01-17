@@ -33,6 +33,21 @@ run() ->
       error
   end.
 
+terminate() ->
+  try
+    io:format("Stopping sensor controller ~n"),
+    process_listener_PID() ! {delete, sensor_controller},
+    io:format("Stopping sensor controller listener ~n"),
+    process_listener_PID() ! {delete, sensor_controller_listener},
+    io:format("Stopping sensors~n"),
+    sensor_database:terminate_sensors(),
+    timer:sleep(timer:seconds(1)),
+    start
+  catch
+    _:_ -> logger_PID() ! {sensor_controller, "Error while stopping sensor controller ~n"},
+      error
+  end.
+
 
 invoke_receiver() ->
   spawn(fun() -> spawn(?MODULE, sensor_controller_receiver(), []) end).
