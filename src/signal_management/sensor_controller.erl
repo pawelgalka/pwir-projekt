@@ -26,6 +26,7 @@ run() ->
     process_listener_PID() ! {create, sensor_controller_listener, ListenerPID},
     io:format("Creating sensors~n"),
     sensor_database:init_sensors(),
+    timer:sleep(timer:seconds(1)),
     start
   catch
     _:_ -> logger_PID() ! {sensor_controller, "Error while creating sensor controller ~n"},
@@ -40,11 +41,9 @@ sensor_controller_receiver() ->
   receive
     {Name, Data} ->
       io:format("Controller received data ~p ~p~n", [Name, Data]),
-      logger_PID() ! {sensor_controller, string:concat("Controller received data: ", atom_to_list(Data))},
-      proxy_controller_PID() ! {Name,Data},
+      proxy_controller_PID() ! {Name, Data},
       sensor_controller_receiver();
     {_} ->
       sensor_controller_receiver()
   end.
 
-create_sensors() -> nic.

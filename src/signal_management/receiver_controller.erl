@@ -23,6 +23,7 @@ run() ->
     process_listener_PID() ! {create, receiver_controller_listener, ListenerPID},
     io:format("Creating receivers~n"),
     receivers_database:init_receivers(),
+    timer:sleep(timer:seconds(1)),
     start
   catch
     _:_ -> logger_PID() ! {sensor_controller, "Error while creating receiver controller ~n"},
@@ -55,6 +56,7 @@ handleRequest([H | T], Data) ->
   io:format("Handling request for receiver ~s~n", [H]),
   case H of
     smoke_receiver -> handle_smoke_signal(Data);
+    climate_control_receiver -> handle_temperature_signal(Data);
     _ -> nic
   end,
   handleRequest(T, Data).
@@ -66,3 +68,7 @@ handle_smoke_signal(Data) ->
     true -> data_manager:lookup(process_orchestrator:processes_set(), smoke_receiver:receiver_id()) ! {on};
     false -> data_manager:lookup(process_orchestrator:processes_set(), smoke_receiver:receiver_id()) ! {off}
   end.
+
+handle_temperature_signal({State, Data}) ->
+  data_manager:lookup(process_orchestrator:processes_set(), climate_control:receiver_id()) ! {State, Data}.
+

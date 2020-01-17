@@ -10,7 +10,6 @@ initiate_app() ->
   process_orchestrator:init(),
 
   process_orchestrator:invoke_listener(),
-  timer:sleep(timer:seconds(1)),
 
   spawn(fun() -> logger_manager:run() end),
   timer:sleep(timer:seconds(1)),

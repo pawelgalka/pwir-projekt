@@ -38,9 +38,9 @@ proxy_signal_receiver() ->
   receive
     {Name, Data} ->
       io:format("Proxy received data ~p ~p~n", [Name, Data]),
-      logger_PID() ! {signal_proxy, string:concat("Proxy received data: ",atom_to_list(Data))},
       case Name of
-        smoke_sensor -> receiver_controller_PID() ! {[smoke_receiver],Data}
+        smoke_sensor -> receiver_controller_PID() ! {[smoke_receiver],Data};
+        temperature_sensor -> receiver_controller_PID() ! {[climate_control_receiver],Data}
 %%      phone_notification
       end,
       proxy_signal_receiver();
