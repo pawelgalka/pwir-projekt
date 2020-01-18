@@ -32,8 +32,8 @@ run() ->
 terminate() ->
   try
     io:format("Stopping climate control receiver ~n"),
-    process_listener_PID() ! {delete, process_orchestrator:processes_set(), climate_control_receiver},
-    process_listener_PID() ! {delete, process_orchestrator:processes_set(), climate_control_receiver_listener}
+    process_listener_PID() ! {delete, climate_control_receiver_listener},
+    process_listener_PID() ! {delete, climate_control_receiver}
   catch
     error:_ -> logger_PID() ! {"Error while terminating alarm!"},
       error
@@ -46,7 +46,7 @@ climate_control_sensor_receiver() ->
   receive
     {on, Temp} ->
       io:format("Climate control sensor received climate control on information! ~p~n", [Temp]),
-      process_orchestrator:gui_PID() ! climateOn,
+      process_orchestrator:gui_PID() ! {climateOn},
       logger_PID() ! {climate_control_receiver, "Climate control sensor received climate control on information!"},
       if Temp < 20 ->
         temperature_sensor() ! {off, Temp},
@@ -57,7 +57,7 @@ climate_control_sensor_receiver() ->
       end;
     {off, Temp} ->
       io:format("Climate control sensor received climate control off information! ~p~n", [Temp]),
-      process_orchestrator:gui_PID() ! climateOff,
+      process_orchestrator:gui_PID() ! {climateOff},
       logger_PID() ! {climate_control_receiver, "Climate control sensor received climate control off information!"},
       if Temp > 25 ->
         temperature_sensor() ! {on, Temp},

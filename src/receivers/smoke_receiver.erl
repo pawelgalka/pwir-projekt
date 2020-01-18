@@ -30,8 +30,8 @@ run() ->
 terminate() ->
   try
     io:format("Stopping smoke receiver ~n"),
-    process_listener_PID() ! {delete, process_orchestrator:processes_set(), smoke_receiver},
-    process_listener_PID() ! {delete, process_orchestrator:processes_set(), smoke_receiver_listener}
+    process_listener_PID() ! {delete, smoke_receiver_listener},
+    process_listener_PID() ! {delete, smoke_receiver}
   catch
     error:_ -> logger_PID() ! {"Error while terminating alarm!"},
       error
@@ -43,12 +43,12 @@ invoke_receiver() ->
 smoke_sensor_receiver() ->
   receive
     {on} ->
-      process_orchestrator:gui_PID() ! smokeOn,
+      process_orchestrator:gui_PID() ! {smokeOn},
       io:format("Smoke sensor received smoke alert!~n"),
       logger_PID() ! {smoke_receiver, "Smoke sensor received smoke alert!"},
       smoke_sensor_receiver();
     {_} ->
-      process_orchestrator:gui_PID() ! smokeOff,
+      process_orchestrator:gui_PID() ! {smokeOff},
       smoke_sensor_receiver()
   end.
 

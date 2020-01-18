@@ -26,7 +26,18 @@ run() ->
     process_listener_PID() ! {create, proxy_listener, ListenerPID},
     start
   catch
-    _:_ -> logger_PID() ! {sensor_controller, "Error while creating proxy"},
+    _:_ -> logger_PID() ! {proxy, "Error while creating proxy"},
+      error
+  end.
+
+terminate() ->
+  try
+    io:format("Stopping signal proxy ~n"),
+    process_listener_PID() ! {delete, proxy_listener},
+    process_listener_PID() ! {delete, proxy},
+    stop
+  catch
+    _:_ -> logger_PID() ! {proxy, "Error while stopping proxy"},
       error
   end.
 
@@ -41,8 +52,8 @@ proxy_signal_receiver() ->
       case Name of
         smoke_sensor -> receiver_controller_PID() ! {[smoke_receiver,phone_notifier],Data};
         temperature_sensor -> receiver_controller_PID() ! {[climate_control_receiver],Data};
+        light_swtich -> receiver_controller_PID() ! {[electrical_outlet_receiver],Data};
         _ -> receiver_controller_PID() ! {[security,phone_notifier,alarm],Data} %%one of alarms
-%%      phone_notification
       end,
       proxy_signal_receiver();
     {_} ->

@@ -45,10 +45,12 @@ phone_notifier_receiver() ->
     {smoke} ->
       io:format("[SMS] House is on fire~n"),
       logger_PID() ! {phone_notifier, "[SMS] House is on fire"},
+      process_orchestrator:gui_PID() ! {phone, "[SMS] House is on fire"},
       phone_notifier_receiver();
     {breach} ->
       io:format("[SMS] Someone is breaking to your house~n"),
       logger_PID() ! {phone_notifier, "[SMS] Someone is breaking to your house"},
+      process_orchestrator:gui_PID() ! {phone, "[SMS] Someone is breaking to your house"},
       phone_notifier_receiver();
     {_} ->
       phone_notifier_receiver()

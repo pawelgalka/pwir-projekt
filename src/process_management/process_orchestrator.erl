@@ -21,6 +21,10 @@ invoke_listener() ->
   ets:insert(processes_set(), {process_listener(), spawn(?MODULE, listen, [])}),
   data_manager:lookup(processes_set(), process_listener()).
 
+stop() ->
+  io:format("Process manager is stopped ~p~n", [pid()]),
+  stop.
+
 listen() ->
   receive
     {create, Key, Pid} -> io:format("Creating process in container ~s at id ~s~n", [processes_set(), Key]),

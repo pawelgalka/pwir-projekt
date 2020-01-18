@@ -28,7 +28,6 @@ initiate_app() ->
   timer:sleep(timer:seconds(1)).
 
 terminate_app() ->
-  %% TODO: fix termination
   spawn(fun() -> sensor_controller:terminate() end),
   timer:sleep(timer:seconds(1)),
 
@@ -36,4 +35,9 @@ terminate_app() ->
   timer:sleep(timer:seconds(1)),
 
   spawn(fun() -> signal_proxy:terminate() end),
-  timer:sleep(timer:seconds(1)).
+  timer:sleep(timer:seconds(1)),
+
+  spawn(fun() -> logger_manager:terminate() end),
+  timer:sleep(timer:seconds(1)),
+
+  process_orchestrator:stop().
