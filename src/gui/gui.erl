@@ -18,17 +18,19 @@ gui() ->
   ets:insert(process_orchestrator:processes_set(), {guiPID, P_PID}),
 
   Wx = wx:new(),
-  Frame = wxFrame:new(Wx, -1, "Smart Erlang Community Home"),
+  Frame = wxFrame:new(Wx, -1, "Smart Erlang Community Home", [{size, {500, 500}}]),
   Panel = wxPanel:new(Frame),
 
   createLabels(Panel),
-  BlindsText = wxStaticText:new(Panel, 14, "Up", [{pos, {156, 50}}]),
-  ClimateText = wxStaticText:new(Panel, 14, "Off", [{pos, {210, 50}}]),
-  OutletText = wxStaticText:new(Panel, 14, "No", [{pos, {257, 50}}]),
-  SmokeText = wxStaticText:new(Panel, 14, "No", [{pos, {310, 50}}]),
+  BlindsText1 = wxStaticText:new(Panel, 14, "Up", [{pos, {50, 150}}, {size, {100, 25}}]),
+  BlindsText2 = wxStaticText:new(Panel, 14, "Up", [{pos, {135, 150}}, {size, {100, 25}}]),
+  ClimateText = wxStaticText:new(Panel, 14, "Off", [{pos, {220, 150}}, {size, {100, 25}}]),
+  OutletText = wxStaticText:new(Panel, 14, "No", [{pos, {305, 150}}, {size, {100, 25}}]),
+  SmokeText = wxStaticText:new(Panel, 14, "No", [{pos, {390, 150}}, {size, {100, 25}}]),
+  TempText = wxStaticText:new(Panel, 14, "", [{pos, {250, 175}}, {size, {100, 25}}]),
 
-  StartButton = wxButton:new(Panel, 12, [{label, "START"}]),
-  StopButton = wxButton:new(Panel, 12, [{label, "STOP"}, {pos, {0, 50}}]),
+  StartButton = wxButton:new(Panel, 20, [{label, "START"}, {pos, {120, 50}}, {size, {100, 25}}]),
+  StopButton = wxButton:new(Panel, 20, [{label, "STOP"}, {pos, {280, 50}}, {size, {100, 25}}]),
 
   wxButton:connect(StartButton, command_button_clicked, [{callback,
     fun(_, _) -> P_PID ! start end}]),
@@ -36,25 +38,33 @@ gui() ->
     fun(_, _) -> P_PID ! stop end}]),
   wxFrame:show(Frame),
 
-  awaitStart(BlindsText, ClimateText, OutletText, SmokeText).
+  awaitStart(BlindsText1, BlindsText2, ClimateText, OutletText, SmokeText, TempText).
 
 createLabels(Panel) ->
-  BlindsLabel = wxStaticText:new(Panel, 14, "Blinds", [{pos, {150, 20}}]),
-  ClimateLabel = wxStaticText:new(Panel, 14, "Climate", [{pos, {200, 20}}]),
-  OutletLabel = wxStaticText:new(Panel, 14, "Outlet", [{pos, {250, 20}}]),
-  SmokeLabel = wxStaticText:new(Panel, 14, "Smoke", [{pos, {300, 20}}]).
+  wxStaticText:new(Panel, 16, "Blind no. 1", [{pos, {50, 125}}, {size, {60, 25}}]),
+  wxStaticText:new(Panel, 16, "Blind no. 2", [{pos, {135, 125}}, {size, {60, 25}}]),
+  wxStaticText:new(Panel, 16, "Climate", [{pos, {220, 125}}, {size, {60, 25}}]),
+  wxStaticText:new(Panel, 16, "Outlet", [{pos, {305, 125}}, {size, {60, 25}}]),
+  wxStaticText:new(Panel, 16, "Smoke", [{pos, {390, 125}}, {size, {60, 25}}]),
+  wxStaticText:new(Panel, 16, "House temperature", [{pos, {120, 175}}, {size, {130, 25}}]).
 
-awaitStart(BlindsText, ClimateText, OutletText, SmokeText) ->
+awaitStart(BlindsText1, BlindsText2, ClimateText, OutletText, SmokeText, TempText) ->
   receive
     start -> app_warmup:initiate_app()
   end,
-  awaitCommand(BlindsText, ClimateText, OutletText, SmokeText).
+  awaitCommand(BlindsText1, BlindsText2, ClimateText, OutletText, SmokeText, TempText).
 
-awaitCommand(BlindsText, ClimateText, OutletText, SmokeText) ->
+awaitCommand(BlindsText1, BlindsText2, ClimateText, OutletText, SmokeText, TempText) ->
   receive
-    blindDown -> wxStaticText:setLabel(BlindsText, "Down");
+    {blind_receiver_listener1, blindDown} -> wxStaticText:setLabel(BlindsText1, "Down");
 
-    blindUp -> wxStaticText:setLabel(BlindsText, "Up");
+    {blind_receiver_listener1, blindUp} -> wxStaticText:setLabel(BlindsText1, "Up");
+
+    {blind_receiver_listener2, blindDown} -> wxStaticText:setLabel(BlindsText2, "Down");
+
+    {blind_receiver_listener2, blindUp} -> wxStaticText:setLabel(BlindsText2, "Up");
+
+    {temp, Temp} -> wxStaticText:setLabel(TempText, float_to_list(Temp));
 
     climateOn -> wxStaticText:setLabel(ClimateText, "On");
 
@@ -71,6 +81,8 @@ awaitCommand(BlindsText, ClimateText, OutletText, SmokeText) ->
   %% TODO: consider phone notification & temperature on GUI
 
   %% TODO: light button for electric outlet
-    stop -> app_warmup:terminate_app()
+    stop -> app_warmup:terminate_app();
+
+    _ -> doNothing
   end,
-  awaitCommand(BlindsText, ClimateText, OutletText, SmokeText).
+  awaitCommand(BlindsText1, BlindsText2, ClimateText, OutletText, SmokeText, TempText).

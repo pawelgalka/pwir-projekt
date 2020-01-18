@@ -9,7 +9,8 @@ process_listener_PID() ->
 start_gui() ->
   io:format("PROGRAM STARTED~n"),
   process_orchestrator:init(),
-  gui:gui().
+  spawn(fun() -> gui:gui() end),
+  started.
 
 initiate_app() ->
   process_orchestrator:invoke_listener(),

@@ -16,7 +16,7 @@ signal_emission_timeout() -> timer:sleep(timer:seconds(6)).
 
 name() -> temperature_sensor.
 
-start_temperature() -> 22.
+start_temperature() -> 22.0.
 
 run() ->
   try
@@ -36,10 +36,12 @@ temperature_sensor_receiver() ->
   receive
     {on, Temp} ->
       send_new_temperature_signal(on, Temp - 1),
+      process_orchestrator:gui_PID() ! {temp, Temp - 1},
       signal_emission_timeout(),
       temperature_sensor_receiver();
     {off, Temp} ->
       send_new_temperature_signal(off, Temp + 0.5),
+      process_orchestrator:gui_PID() ! {temp, Temp + 0.5},
       signal_emission_timeout(),
       temperature_sensor_receiver();
     {_, _} ->
