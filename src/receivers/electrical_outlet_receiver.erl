@@ -43,14 +43,14 @@ invoke_receiver() ->
 electric_sensor_receiver() ->
   receive
     {on} ->
-      io:format("Turning elecricatl outlet on! ~n"),
+      io:format("Turning electrical outlet on! ~n"),
       process_orchestrator:gui_PID() ! {outletOn},
-      logger_PID() ! {electrical_outlet_receiver, "Turning elecricatl outlet on!"},
+      logger_PID() ! {electrical_outlet_receiver, "Turning electrical outlet on!"},
       electric_sensor_receiver();
     {off} ->
-      io:format("Turning elecricatl outlet off! ~n"),
+      io:format("Turning electrical outlet off! ~n"),
       process_orchestrator:gui_PID() ! {outletOff},
-      logger_PID() ! {electrical_outlet_receiver, "Turning elecricatl outlet off!"},
+      logger_PID() ! {electrical_outlet_receiver, "Turning electrical outlet off!"},
       electric_sensor_receiver();
     {_} ->
       electric_sensor_receiver()
