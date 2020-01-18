@@ -47,10 +47,12 @@ invoke_receiver(Param) ->
 blind_receiver(Param) ->
   receive
     {down} ->
+      process_orchestrator:gui_PID() ! blindDown,
       io:format("~p going down~n",[Param]),
       logger_PID() ! {blind_receiver, atom_to_list(Param) ++ " going down"},
       blind_receiver(Param);
     {up} ->
+      process_orchestrator:gui_PID() ! blindUp,
       io:format("~p going up~n",[Param]),
       logger_PID() ! {blind_receiver, atom_to_list(Param) ++ " going up"},
       blind_receiver(Param);

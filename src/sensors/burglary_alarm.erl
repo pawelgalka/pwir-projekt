@@ -48,7 +48,7 @@ burglary_sensor(Param) ->
 
 
 send_breach_signal(Param) ->
-  sensor_controller_listener_PID() ! {Param,danger}.
+  sensor_controller_listener_PID() ! {Param, danger}.
 
 send_safe_signal(Param) ->
-  sensor_controller_listener_PID() ! {Param,safe}.
+  sensor_controller_listener_PID() ! {Param, safe}.

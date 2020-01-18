@@ -42,10 +42,12 @@ smoke_sensor_receiver() ->
   receive
     {on} ->
       io:format("Turning elecricatl outlet on!"),
+      process_orchestrator:gui_PID() ! outletOn,
       logger_PID() ! {electrical_outlet_receiver,"Turning elecricatl outlet on!"},
       smoke_sensor_receiver();
     {off} ->
       io:format("Turning elecricatl outlet off!"),
+      process_orchestrator:gui_PID() ! outletOff,
       logger_PID() ! {electrical_outlet_receiver,"Turning elecricatl outlet off!"},
       smoke_sensor_receiver();
     {_} ->

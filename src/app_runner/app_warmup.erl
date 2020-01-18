@@ -6,9 +6,12 @@
 process_listener_PID() ->
   data_manager:lookup(process_orchestrator:processes_set(), process_orchestrator:process_listener()).
 
-initiate_app() ->
+start_gui() ->
+  io:format("PROGRAM STARTED"),
   process_orchestrator:init(),
+  gui:gui().
 
+initiate_app() ->
   process_orchestrator:invoke_listener(),
 
   spawn(fun() -> logger_manager:run() end),
@@ -32,8 +35,3 @@ terminate_app() ->
 
   spawn(fun() -> signal_proxy:terminate() end),
   timer:sleep(timer:seconds(1)).
-
-
-
-
-

@@ -43,10 +43,12 @@ invoke_receiver() ->
 smoke_sensor_receiver() ->
   receive
     {on} ->
+      process_orchestrator:gui_PID() ! smokeOn,
       io:format("Smoke sensor received smoke alert!~n"),
       logger_PID() ! {smoke_receiver, "Smoke sensor received smoke alert!"},
       smoke_sensor_receiver();
     {_} ->
+      process_orchestrator:gui_PID() ! smokeOff,
       smoke_sensor_receiver()
   end.
 

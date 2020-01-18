@@ -5,3 +5,4 @@
 {["src/receivers/*"], [debug_info, {outdir, "ebin"}]}.
 {["src/sensors/*"], [debug_info, {outdir, "ebin"}]}.
 {["src/signal_management/*"], [debug_info, {outdir, "ebin"}]}.
+{["src/gui/*"], [debug_info, {outdir, "ebin"}]}.

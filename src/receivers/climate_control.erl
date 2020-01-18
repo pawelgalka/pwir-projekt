@@ -46,6 +46,7 @@ climate_control_sensor_receiver() ->
   receive
     {on, Temp} ->
       io:format("Climate control sensor received climate control on information! ~p~n", [Temp]),
+      process_orchestrator:gui_PID() ! climateOn,
       logger_PID() ! {climate_control_receiver, "Climate control sensor received climate control on information!"},
       if Temp < 20 ->
         temperature_sensor() ! {off, Temp},
@@ -56,6 +57,7 @@ climate_control_sensor_receiver() ->
       end;
     {off, Temp} ->
       io:format("Climate control sensor received climate control off information! ~p~n", [Temp]),
+      process_orchestrator:gui_PID() ! outletOff,
       logger_PID() ! {climate_control_receiver, "Climate control sensor received climate control off information!"},
       if Temp > 25 ->
         temperature_sensor() ! {on, Temp},
