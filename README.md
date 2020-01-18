@@ -5,6 +5,6 @@ To run
 2. erl -make
 3. cd ebin
 4. erl
-5. app_warmup:initiate_app().
+5. app_warmup:start_gui().
 
 Logs are in ebin directory
