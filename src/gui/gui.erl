@@ -27,7 +27,6 @@ gui() ->
   StartButton = wxButton:new(Panel, 20, [{label, "START"}, {pos, {120, 50}}, {size, {100, 25}}]),
   StopButton = wxButton:new(Panel, 20, [{label, "STOP"}, {pos, {280, 50}}, {size, {100, 25}}]),
   LightButton = wxButton:new(Panel, 20, [{label, "SWITCH LIGHTS"}, {pos, {200, 270}}, {size, {100, 50}}]),
-  ets:insert(process_orchestrator:processes_set(), {light_state, off}),
 
   wxButton:connect(StartButton, command_button_clicked, [{callback,
     fun(_, _) -> GUI_PID ! start end}]),

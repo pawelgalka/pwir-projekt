@@ -4,6 +4,7 @@
 -compile(export_all).
 
 init_sensors() ->
+  ets:insert(process_orchestrator:processes_set(), {light_state, off}),
   spawn(fun() -> smoke_sensor:run() end),
   spawn(fun() -> temperature_sensor:run() end),
   spawn(fun() -> burglary_alarm:run() end),
