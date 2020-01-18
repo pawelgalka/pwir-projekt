@@ -19,7 +19,7 @@ gui() ->
   BlindsText1 = wxStaticText:new(Panel, 14, "Up", [{pos, {50, 150}}]),
   BlindsText2 = wxStaticText:new(Panel, 14, "Up", [{pos, {135, 150}}]),
   ClimateText = wxStaticText:new(Panel, 14, "Off", [{pos, {220, 150}}]),
-  OutletText = wxStaticText:new(Panel, 14, "No", [{pos, {305, 150}}]),
+  OutletText = wxStaticText:new(Panel, 14, "Off", [{pos, {305, 150}}]),
   SmokeText = wxStaticText:new(Panel, 14, "No", [{pos, {390, 150}}]),
   TempText = wxStaticText:new(Panel, 14, "22.0 °C", [{pos, {250, 190}}]),
   PhoneText = wxStaticText:new(Panel, 14, "[SMS]", [{pos, {160, 230}}]),
@@ -86,8 +86,10 @@ awaitCommand(BlindsText1, BlindsText2, ClimateText, OutletText, SmokeText, TempT
 
     {smokeOff} -> wxStaticText:setLabel(SmokeText, "No");
 
-    stop -> app_warmup:terminate_app();
+    stop -> app_warmup:terminate_app(),ets:insert(process_orchestrator:processes_set(), {guiPID, self()});
 
-    A -> io:format("Unknown signal ~p~n", [A])
+    start -> app_warmup:initiate_app();
+
+    Command -> io:format("Unknown signal ~p~n", [Command])
   end,
   awaitCommand(BlindsText1, BlindsText2, ClimateText, OutletText, SmokeText, TempText, PhoneText).

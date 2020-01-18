@@ -32,6 +32,17 @@ run() ->
       error
   end.
 
+terminate() ->
+  try
+    io:format("Stopping temperature sensor ~n"),
+    process_listener_PID() ! {delete, temperature_sensor_receiver},
+    process_listener_PID() ! {delete, temperature_sensor}
+  catch
+    A:B -> io:format("~s~s~n", [A, B]),
+      logger_PID() ! {smoke_sensor, "Error while stopping temperature sensor ~n"},
+      error
+  end.
+
 temperature_sensor_receiver() ->
   receive
     {on, Temp} ->

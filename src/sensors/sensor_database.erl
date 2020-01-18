@@ -11,4 +11,5 @@ init_sensors() ->
 
 terminate_sensors() ->
   spawn(fun() -> smoke_sensor:terminate() end),
-  spawn(fun() -> temperature_sensor:run() end).
+  spawn(fun() -> temperature_sensor:terminate() end),
+  spawn(fun() -> burglary_alarm:terminate() end).

@@ -30,8 +30,7 @@ run() ->
 terminate() ->
   try
     io:format("Stopping smoke sensor ~n"),
-    process_listener_PID() ! {delete, smoke_sensor},
-    smoke_signal_exporter()
+    process_listener_PID() ! {delete, smoke_sensor}
   catch
     A:B -> io:format("~s~s~n", [A, B]),
       logger_PID() ! {smoke_sensor, "Error while stopping smoke sensor ~n"},

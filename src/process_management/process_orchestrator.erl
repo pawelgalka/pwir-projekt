@@ -23,6 +23,8 @@ invoke_listener() ->
 
 stop() ->
   io:format("Process manager is stopped ~p~n", [pid()]),
+  ets:delete(processes_set()),
+  ets:new(processes_set(), [ordered_set, public, named_table]),
   stop.
 
 listen() ->

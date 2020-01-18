@@ -21,7 +21,7 @@ name() -> burglary_alarm.
 run() ->
   try
     io:format("Starting burglary system ~n"),
-    process_listener_PID() ! {create, burglary_alarm},
+    process_listener_PID() ! {create, burglary_alarm, pid()},
     Pid1 = spawn(fun() -> burglary_sensor(burglary_alarm_sensor) end),
     process_listener_PID() ! {create, burglary_alarm_sensor, Pid1},
     io:format("Starting burglary sensor 1~n"),
@@ -32,6 +32,16 @@ run() ->
       error
   end.
 
+terminate() ->
+  try
+    io:format("Stopping burglary system ~n"),
+    process_listener_PID() ! {delete, burglary_alarm_sensor},
+    process_listener_PID() ! {delete, burglary_alarm}
+  catch
+    A:B -> io:format("~s~s~n", [A, B]),
+      logger_PID() ! {smoke_sensor, "Error while stopping burglary system ~n"},
+      error
+  end.
 
 burglary_sensor(Param) ->
   Random_output = rand:uniform(10),
