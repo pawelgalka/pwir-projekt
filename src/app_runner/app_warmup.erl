@@ -7,7 +7,7 @@ process_listener_PID() ->
   data_manager:lookup(process_orchestrator:processes_set(), process_orchestrator:process_listener()).
 
 start_gui() ->
-  io:format("PROGRAM STARTED"),
+  io:format("PROGRAM STARTED~n"),
   process_orchestrator:init(),
   gui:gui().
 
@@ -27,6 +27,7 @@ initiate_app() ->
   timer:sleep(timer:seconds(1)).
 
 terminate_app() ->
+  %% TODO: fix termination
   spawn(fun() -> sensor_controller:terminate() end),
   timer:sleep(timer:seconds(1)),
 

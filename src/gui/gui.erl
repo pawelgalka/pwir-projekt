@@ -17,8 +17,8 @@ gui() ->
   io:format("GUI is initialized ~p~n", [P_PID]),
   ets:insert(process_orchestrator:processes_set(), {guiPID, P_PID}),
 
-  Wx=wx:new(),
-  Frame=wxFrame:new(Wx, -1, "GUI"),
+  Wx = wx:new(),
+  Frame = wxFrame:new(Wx, -1, "Smart Erlang Community Home"),
   Panel = wxPanel:new(Frame),
 
   createLabels(Panel),
@@ -27,13 +27,13 @@ gui() ->
   OutletText = wxStaticText:new(Panel, 14, "No", [{pos, {257, 50}}]),
   SmokeText = wxStaticText:new(Panel, 14, "No", [{pos, {310, 50}}]),
 
-  StartButton = wxButton:new(Panel, 12, [{label,"START"}]),
-  StopButton = wxButton:new(Panel, 12, [{label,"STOP"}, {pos, {0, 50}}]),
+  StartButton = wxButton:new(Panel, 12, [{label, "START"}]),
+  StopButton = wxButton:new(Panel, 12, [{label, "STOP"}, {pos, {0, 50}}]),
 
   wxButton:connect(StartButton, command_button_clicked, [{callback,
-    fun(_, _) -> P_PID ! start end }]),
+    fun(_, _) -> P_PID ! start end}]),
   wxButton:connect(StopButton, command_button_clicked, [{callback,
-    fun(_, _) -> P_PID ! stop end }]),
+    fun(_, _) -> P_PID ! stop end}]),
   wxFrame:show(Frame),
 
   awaitStart(BlindsText, ClimateText, OutletText, SmokeText).
@@ -68,6 +68,9 @@ awaitCommand(BlindsText, ClimateText, OutletText, SmokeText) ->
 
     smokeOff -> wxStaticText:setLabel(SmokeText, "No");
 
+  %% TODO: consider phone notification & temperature on GUI
+
+  %% TODO: light button for electric outlet
     stop -> app_warmup:terminate_app()
   end,
   awaitCommand(BlindsText, ClimateText, OutletText, SmokeText).
