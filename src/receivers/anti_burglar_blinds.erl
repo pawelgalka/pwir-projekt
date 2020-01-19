@@ -46,6 +46,11 @@ invoke_receiver(Param) ->
 
 blind_receiver(Param) ->
   receive
+    {armed} ->
+      process_orchestrator:gui_PID() ! {Param, armed},
+      io:format("~p being armed ~n", [Param]),
+      logger_PID() ! {blind_receiver, atom_to_list(Param) ++ " being armed "},
+      blind_receiver(Param);
     {down} ->
       process_orchestrator:gui_PID() ! {Param, blindDown},
       io:format("~p going down~n", [Param]),

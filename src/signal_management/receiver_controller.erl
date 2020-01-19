@@ -40,7 +40,7 @@ terminate() ->
     io:format("Stopping receiver controller listener ~n"),
     process_listener_PID() ! {delete, sensor_controller_listener},
     io:format("Stopping receivers~n"),
-    receivers_database:terminate_sensors(),
+    receivers_database:terminate_receivers(),
     timer:sleep(timer:seconds(1)),
     start
   catch
@@ -75,6 +75,7 @@ handleRequest([H | T], Data) ->
     phone_notifier -> handle_notification(Data);
     climate_control_receiver -> handle_temperature_signal(Data);
     security -> handle_breach_signal(Data);
+    arming -> handle_arming_signal(security_list(), Data);
     electrical_outlet_receiver -> handle_light_signal(Data);
     _ -> nic
   end,
@@ -93,7 +94,7 @@ handle_light_signal(Data) ->
     on -> ets:delete(process_orchestrator:processes_set(), light_state),
       ets:insert(process_orchestrator:processes_set(), {light_state, on}),
       data_manager:lookup(process_orchestrator:processes_set(), electrical_outlet_receiver:receiver_id()) ! {on};
-    off ->ets:delete(process_orchestrator:processes_set(), light_state),
+    off -> ets:delete(process_orchestrator:processes_set(), light_state),
       ets:insert(process_orchestrator:processes_set(), {light_state, off}),
       data_manager:lookup(process_orchestrator:processes_set(), electrical_outlet_receiver:receiver_id()) ! {off}
   end.
@@ -112,12 +113,12 @@ handle_notification(Data) ->
 
 handle_breach_signal(Data) ->
   Receivers = security_list(),
-  handle_single_breach_signal(Receivers, Data).
+  handle_single_breach_signal(Receivers, Data, data_manager:lookup(process_orchestrator:processes_set(), armed)).
 
 
-handle_single_breach_signal([], _) -> ok;
+handle_single_breach_signal([], _, _) -> ok;
 
-handle_single_breach_signal([{State, Receiver} | T], Data) ->
+handle_single_breach_signal([{State, Receiver} | T], Data, ArmedState) when ArmedState == off ->
   ReceiverState = data_manager:lookup(process_orchestrator:processes_set(), State),
   ReceiverPID = data_manager:lookup(process_orchestrator:processes_set(), Receiver),
   io:format("~p ~p~n", [Receiver, ReceiverState]),
@@ -137,5 +138,46 @@ handle_single_breach_signal([{State, Receiver} | T], Data) ->
           ets:insert(process_orchestrator:processes_set(), {State, up})
       end
   end,
-  handle_single_breach_signal(T, Data).
+  handle_single_breach_signal(T, Data, ArmedState);
 
+handle_single_breach_signal([{State, Receiver} | T], Data, ArmedState) when ArmedState == on ->
+  ReceiverState = data_manager:lookup(process_orchestrator:processes_set(), State),
+  io:format("~p ~p~n", [Receiver, ReceiverState]),
+  case ReceiverState of
+    up ->
+      case Data of
+        danger ->
+          ets:delete(process_orchestrator:processes_set(), State),
+          ets:insert(process_orchestrator:processes_set(), {State, down});
+        safe -> ok
+      end;
+    down ->
+      case Data of
+        danger -> ok;
+        safe ->
+          ets:delete(process_orchestrator:processes_set(), State),
+          ets:insert(process_orchestrator:processes_set(), {State, up})
+      end
+  end,
+  handle_single_breach_signal(T, Data, ArmedState).
+
+handle_arming_signal(Receivers, Data) ->
+  ArmedState = data_manager:lookup(process_orchestrator:processes_set(), armed),
+  handle_single_arm_signal(Receivers, Data, ArmedState).
+
+handle_single_arm_signal([], _, _) -> ok;
+
+handle_single_arm_signal([{State, Receiver} | T], Data, ArmedState) ->
+  ReceiverState = data_manager:lookup(process_orchestrator:processes_set(), State),
+  ReceiverPID = data_manager:lookup(process_orchestrator:processes_set(), Receiver),
+  case ArmedState of
+    on ->
+      ets:delete(process_orchestrator:processes_set(), armed),
+      ets:insert(process_orchestrator:processes_set(), {armed, off}),
+      ReceiverPID ! {ReceiverState};
+    off ->
+      ets:delete(process_orchestrator:processes_set(), armed),
+      ets:insert(process_orchestrator:processes_set(), {armed, on}),
+      ReceiverPID ! {armed}
+  end,
+  handle_single_arm_signal(T, Data, ArmedState).

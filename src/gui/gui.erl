@@ -34,7 +34,8 @@ smart_home_gui() ->
   StartButton = wxButton:new(Panel, 20, [{label, "START"}, {pos, {40, 50}}, {size, {100, 25}}]),
   StopButton = wxButton:new(Panel, 20, [{label, "STOP"}, {pos, {180, 50}}, {size, {100, 25}}]),
   CloseButton = wxButton:new(Panel, 20, [{label, "CLOSE"}, {pos, {320, 50}}, {size, {100, 25}}]),
-  LightButton = wxButton:new(Panel, 20, [{label, "SWITCH LIGHTS"}, {pos, {200, 270}}, {size, {100, 50}}]),
+  LightButton = wxButton:new(Panel, 20, [{label, "SWITCH LIGHTS"}, {pos, {100, 270}}, {size, {100, 50}}]),
+  ArmButton = wxButton:new(Panel, 20, [{label, "ARM ALARM"}, {pos, {300, 270}}, {size, {100, 50}}]),
 
   wxButton:connect(CloseButton, command_button_clicked, [{callback,
     fun(_, _) -> GUI_PID ! close end}]),
@@ -49,6 +50,16 @@ smart_home_gui() ->
         sensor_controller_listener_PID() ! {light_swtich, off};
         true -> sensor_controller_listener_PID() ! {light_swtich, on}
       end
+    end}]),
+  wxButton:connect(ArmButton, command_button_clicked, [{callback,
+    fun(_, _) ->
+      State = data_manager:lookup(process_orchestrator:processes_set(), armed),
+      if State == on ->
+        wxButton:setLabel(ArmButton, "ARM ALARM"),
+        sensor_controller_listener_PID() ! {armed, off};
+        true -> wxButton:setLabel(ArmButton, "UNARM ALARM"),sensor_controller_listener_PID() ! {armed, on}
+      end
+
     end}]),
   wxFrame:show(Frame),
 
@@ -109,9 +120,13 @@ await_command(BlindsText1, BlindsText2, ClimateText, OutletText, SmokeText, Temp
   receive
     {blind_receiver_listener1, blindDown} -> wxStaticText:setLabel(BlindsText1, "Down");
 
+    {blind_receiver_listener1, armed} -> wxStaticText:setLabel(BlindsText1, "Armed");
+
     {blind_receiver_listener1, blindUp} -> wxStaticText:setLabel(BlindsText1, "Up");
 
     {blind_receiver_listener2, blindDown} -> wxStaticText:setLabel(BlindsText2, "Down");
+
+    {blind_receiver_listener2, armed} -> wxStaticText:setLabel(BlindsText2, "Armed");
 
     {blind_receiver_listener2, blindUp} -> wxStaticText:setLabel(BlindsText2, "Up");
 

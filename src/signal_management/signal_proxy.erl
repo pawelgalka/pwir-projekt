@@ -53,7 +53,8 @@ proxy_signal_receiver() ->
         smoke_sensor -> receiver_controller_PID() ! {[smoke_receiver,phone_notifier],Data};
         temperature_sensor -> receiver_controller_PID() ! {[climate_control_receiver],Data};
         light_swtich -> receiver_controller_PID() ! {[electrical_outlet_receiver],Data};
-        _ -> receiver_controller_PID() ! {[security,phone_notifier,alarm],Data} %%one of alarms
+        armed -> receiver_controller_PID() ! {[arming],Data};
+        _ -> receiver_controller_PID() ! {[security,phone_notifier],Data} %%one of alarms
       end,
       proxy_signal_receiver();
     {_} ->
