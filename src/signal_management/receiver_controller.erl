@@ -140,26 +140,26 @@ handle_single_breach_signal([{State, Receiver} | T], Data, ArmedState) when Arme
   end,
   handle_single_breach_signal(T, Data, ArmedState);
 
-handle_single_breach_signal([{State, Receiver} | T], Data, ArmedState) when ArmedState == on ->
-  ReceiverState = data_manager:lookup(process_orchestrator:processes_set(), State),
-  io:format("~p ~p~n", [Receiver, ReceiverState]),
-  case ReceiverState of
-    up ->
-      case Data of
-        danger ->
-          ets:delete(process_orchestrator:processes_set(), State),
-          ets:insert(process_orchestrator:processes_set(), {State, down});
-        safe -> ok
-      end;
-    down ->
-      case Data of
-        danger -> ok;
-        safe ->
-          ets:delete(process_orchestrator:processes_set(), State),
-          ets:insert(process_orchestrator:processes_set(), {State, up})
-      end
-  end,
-  handle_single_breach_signal(T, Data, ArmedState).
+handle_single_breach_signal([{State, Receiver} | T], Data, ArmedState) when ArmedState == on -> ok.
+%%  ReceiverState = data_manager:lookup(process_orchestrator:processes_set(), State),
+%%  io:format("~p ~p~n", [Receiver, ReceiverState]),
+%%  case ReceiverState of
+%%    up ->
+%%      case Data of
+%%        danger ->
+%%          ets:delete(process_orchestrator:processes_set(), State),
+%%          ets:insert(process_orchestrator:processes_set(), {State, down});
+%%        safe -> ok
+%%      end;
+%%    down ->
+%%      case Data of
+%%        danger -> ok;
+%%        safe ->
+%%          ets:delete(process_orchestrator:processes_set(), State),
+%%          ets:insert(process_orchestrator:processes_set(), {State, up})
+%%      end
+%%  end,
+%%  handle_single_breach_signal(T, Data, ArmedState).
 
 handle_arming_signal(Receivers, Data) ->
   ArmedState = data_manager:lookup(process_orchestrator:processes_set(), armed),
