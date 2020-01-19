@@ -27,6 +27,10 @@ stop() ->
   ets:new(processes_set(), [ordered_set, public, named_table]),
   stop.
 
+close_app() ->
+  ets:delete(processes_set()),
+  close.
+
 listen() ->
   receive
     {create, Key, Pid} -> io:format("Creating process in container ~s at id ~s~n", [processes_set(), Key]),

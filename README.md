@@ -7,4 +7,5 @@ To run
 4. erl
 5. app_warmup:start_gui().
 
+Credentials: admin:admin\
 Logs are in ebin directory
