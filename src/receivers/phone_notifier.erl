@@ -45,10 +45,11 @@ phone_notifier_receiver() ->
       logger_PID() ! {phone_notifier, "[SMS] House is on fire"},
       process_orchestrator:gui_PID() ! {phone, "[SMS] House is on fire"},
       phone_notifier_receiver();
-    {breach} ->
+    {breach,Sensor} ->
       io:format("[SMS] Someone is breaking to your house~n"),
-      logger_PID() ! {phone_notifier, "[SMS] Someone is breaking to your house"},
-      process_orchestrator:gui_PID() ! {phone, "[SMS] Someone is breaking to your house"},
+      logger_PID() ! {phone_notifier, "[SMS] Someone is breaking to your house from "++atom_to_list(Sensor)},
+      [_, _, _, Id] = string:tokens(atom_to_list(Sensor), "_"),
+      process_orchestrator:gui_PID() ! {phone, "[SMS] Someone is breaking to your house from burglary alarm sensor "++Id},
       phone_notifier_receiver();
     {_} ->
       phone_notifier_receiver()

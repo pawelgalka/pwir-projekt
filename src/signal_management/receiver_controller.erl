@@ -67,11 +67,11 @@ handleRequest([H | T], Data) ->
   io:format("Handling request for receiver ~s~n", [H]),
   case H of
     smoke_receiver -> spawn(?MODULE, handle_smoke_signal, [Data]);
-    phone_notifier -> spawn(?MODULE,handle_notification, [Data]);
-    climate_control_receiver -> spawn(?MODULE,handle_temperature_signal, [Data]);
-    security -> spawn(?MODULE,handle_breach_signal, [Data]);
-    arming -> spawn(?MODULE,handle_arming_signal,[security_list(), Data]);
-    electrical_outlet_receiver -> spawn(?MODULE,handle_light_signal,[Data]);
+    phone_notifier -> spawn(?MODULE, handle_notification, [Data]);
+    climate_control_receiver -> spawn(?MODULE, handle_temperature_signal, [Data]);
+    security -> spawn(?MODULE, handle_breach_signal, [Data]);
+    arming -> spawn(?MODULE, handle_arming_signal, [security_list(), Data]);
+    electrical_outlet_receiver -> spawn(?MODULE, handle_light_signal, [Data]);
     _ -> nic
   end,
   handleRequest(T, Data).
@@ -99,13 +99,13 @@ handle_notification(Data) ->
   case Data of
     true -> data_manager:lookup(phone_notifier:receiver_id()) ! {smoke};
     false -> skip;
-    danger -> data_manager:lookup(phone_notifier:receiver_id()) ! {breach};
-    safe -> skip
+    {danger, Sensor} -> data_manager:lookup(phone_notifier:receiver_id()) ! {breach, Sensor};
+    {safe, _} -> skip
   end.
 
-handle_breach_signal(Data) ->
+handle_breach_signal({Data, _}) ->
   Receivers = security_list(),
-  io:format("Armed state: ~p~n",[data_manager:lookup_state(armed)]),
+  io:format("Armed state: ~p~n", [data_manager:lookup_state(armed)]),
   handle_single_breach_signal(Receivers, Data, data_manager:lookup_state(armed)).
 
 handle_single_breach_signal([], _, _) -> ok;

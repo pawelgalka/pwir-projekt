@@ -24,6 +24,7 @@ smart_home_gui() ->
 
   create_labels(Panel),
   Validation = wxStaticText:new(Panel, 16, "", [{pos, {200, 430}}, {size, {100, 25}}]),
+  AlarmCounter = wxStaticText:new(Panel, 16, "Alarm Controller: 1", [{pos, {50, 490}}, {size, {130, 25}}]),
 
   {BlindsText1, BlindsText2, ClimateText, OutletText, SmokeText, TempText, PhoneText} = create_info_fields(Panel),
 
@@ -61,7 +62,8 @@ smart_home_gui() ->
     end}]),
   wxButton:connect(AddAlarmButton, command_button_clicked, [{callback,
     fun(_, _) -> spawn(fun() ->
-      burglary_alarm:run(burglary_alarm:runNewBurglarySensor()) end)
+      burglary_alarm:run_new_burglary_sensor(data_manager:lookup_state(alarm_counter)) end),
+      wxStaticText:setLabel(AlarmCounter, "Alarm Controller: " ++ integer_to_list(data_manager:lookup_state(alarm_counter)))
     end}]),
 
   wxFrame:show(Frame),
@@ -110,7 +112,7 @@ create_info_fields(Panel) ->
   OutletText = wxStaticText:new(Panel, 14, "Off", [{pos, {305, 150}}]),
   SmokeText = wxStaticText:new(Panel, 14, "No", [{pos, {390, 150}}]),
   TempText = wxStaticText:new(Panel, 14, "22.0 °C", [{pos, {250, 190}}]),
-  PhoneText = wxStaticText:new(Panel, 14, "[SMS]", [{pos, {160, 230}}]),
+  PhoneText = wxStaticText:new(Panel, 14, "[SMS]", [{pos, {70, 230}}]),
   {BlindsText1, BlindsText2, ClimateText, OutletText, SmokeText, TempText, PhoneText}.
 
 login_page(GUI_PID) ->
@@ -155,10 +157,8 @@ create_labels(Panel) ->
   wxStaticText:new(Panel, 16, "Outlet", [{pos, {305, 125}}, {size, {60, 25}}]),
   wxStaticText:new(Panel, 16, "Smoke", [{pos, {390, 125}}, {size, {60, 25}}]),
   wxStaticText:new(Panel, 16, "House temperature:", [{pos, {140, 190}}, {size, {130, 25}}]),
-  wxStaticText:new(Panel, 16, "Phone:", [{pos, {100, 230}}, {size, {130, 25}}]),
   wxStaticText:new(Panel, 16, "Minimal temperature:", [{pos, {100, 350}}, {size, {130, 25}}]),
-  wxStaticText:new(Panel, 16, "Maximum temperature:", [{pos, {300, 350}}, {size, {130, 25}}]),
-  wxStaticText:new(Panel, 16, "Alarm Controller:", [{pos, {50, 480}}, {size, {30, 25}}]).
+  wxStaticText:new(Panel, 16, "Maximum temperature:", [{pos, {300, 350}}, {size, {130, 25}}]).
 
 await_start(BlindsText1, BlindsText2, ClimateText, OutletText, SmokeText, TempText, PhoneText) ->
   receive

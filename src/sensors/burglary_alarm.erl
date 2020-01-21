@@ -4,13 +4,13 @@
 -compile(export_all).
 
 process_listener_PID() ->
-  data_manager:lookup(process_orchestrator:processes_set(), process_orchestrator:process_listener()).
+  data_manager:lookup(process_orchestrator:process_listener()).
 
 logger_PID() ->
-  data_manager:lookup(process_orchestrator:processes_set(), logger_manager:logger_listener()).
+  data_manager:lookup(logger_manager:logger_listener()).
 
 sensor_controller_listener_PID() ->
-  data_manager:lookup(process_orchestrator:processes_set(), sensor_controller:sensor_listener()).
+  data_manager:lookup(sensor_controller:sensor_listener()).
 
 signal_emission_timeout() -> timer:sleep(timer:seconds(6)).
 
@@ -22,9 +22,12 @@ run() ->
   try
     io:format("Starting burglary system ~n"),
     process_listener_PID() ! {create, burglary_alarm},
-    Pid1 = spawn(fun() -> burglary_sensor(burglary_alarm_sensor) end),
-    process_listener_PID() ! {create, burglary_alarm_sensor, Pid1},
-    io:format("Starting burglary sensor 1~n"),
+    Id = list_to_atom("burglary_alarm_sensor_" ++ integer_to_list(data_manager:lookup_state(alarm_counter))),
+    Pid1 = spawn(fun() -> burglary_sensor(Id) end),
+    process_listener_PID() ! {create, Id, Pid1},
+    data_manager:update_alarm_counter(),
+    io:format("Starting burglary sensor~n"),
+
     start
   catch
     A:B -> io:format("~s~s~n", [A, B]),
@@ -32,17 +35,19 @@ run() ->
       error
   end.
 
-runNewBurglarySensor(Id) ->
-%%  io:format("Starting new burglary system, Id = ~p ~n", element(1, Id)),
-  Pid1 = spawn(fun() -> burglary_sensor(burglary_alarm_sensor) end),
-  register(list_to_atom("burglary_alarm_sensor" ++ string:to_lower(element(1, Id))), Pid1),
-  io:format("Starting burglary sensor 1~n"),
+run_new_burglary_sensor(Id) ->
+  Name = list_to_atom("burglary_alarm_sensor_" ++ integer_to_list(Id)),
+  Pid1 = spawn(fun() -> burglary_sensor(Name) end),
+  process_listener_PID() ! {create, Name, Pid1},
+  data_manager:update_alarm_counter(),
+  io:format("Starting burglary sensor ~p~n", [Id]),
   start.
 
 terminate() ->
   try
     io:format("Stopping burglary system ~n"),
-    process_listener_PID() ! {delete, burglary_alarm_sensor}
+      NumberOfSensors = data_manager:lookup_state(alarm_counter) - 1,
+      delete_burglary_sensor(NumberOfSensors)
   catch
     A:B -> io:format("~s~s~n", [A, B]),
       logger_PID() ! {burglary_alarm_sensor, "Error while stopping burglary system ~n"},
@@ -69,3 +74,12 @@ send_breach_signal(Param) ->
 
 send_safe_signal(Param) ->
   sensor_controller_listener_PID() ! {Param, safe}.
+
+
+delete_burglary_sensor(0) -> io:format("Burglary sensors deleted");
+
+delete_burglary_sensor(NumberOfSensors)->
+  Name = list_to_atom("burglary_alarm_sensor_" ++ integer_to_list(NumberOfSensors)),
+  process_listener_PID() ! {delete, Name},
+  delete_burglary_sensor(NumberOfSensors-1).
+
