@@ -20,7 +20,8 @@ signal_proxy() -> proxy_listener.
 run() ->
   try
     io:format("Starting signal proxy ~n"),
-    process_listener_PID() ! {create, proxy, self()},
+    io:format("~p ~n",[self()]),
+%%    process_listener_PID() ! {create, proxy, self()},
     ListenerPID = invoke_receiver(),
     io:format("Starting proxy listener at PID : ~p ~n", [ListenerPID]),
     process_listener_PID() ! {create, proxy_listener, ListenerPID},
@@ -34,7 +35,7 @@ terminate() ->
   try
     io:format("Stopping signal proxy ~n"),
     process_listener_PID() ! {delete, proxy_listener},
-    process_listener_PID() ! {delete, proxy},
+%%    process_listener_PID() ! {delete, proxy},
     stop
   catch
     _:_ -> logger_PID() ! {proxy, "Error while stopping proxy"},

@@ -19,7 +19,7 @@ receiver_id() -> climate_control_receiver_listener.
 run() ->
   try
     io:format("Starting climate control receiver ~n"),
-    process_listener_PID() ! {create, climate_control_receiver, self()},
+%%    process_listener_PID() ! {create, climate_control_receiver, self()},
     ListenerPID = invoke_receiver(),
     io:format("Starting climate control receiver listener at PID : ~p ~n", [ListenerPID]),
     process_listener_PID() ! {create, climate_control_receiver_listener, ListenerPID},
@@ -32,8 +32,8 @@ run() ->
 terminate() ->
   try
     io:format("Stopping climate control receiver ~n"),
-    process_listener_PID() ! {delete, climate_control_receiver_listener},
-    process_listener_PID() ! {delete, climate_control_receiver}
+    process_listener_PID() ! {delete, climate_control_receiver_listener}
+%%    process_listener_PID() ! {delete, climate_control_receiver}
   catch
     error:_ -> logger_PID() ! {"Error while terminating alarm!"},
       error

@@ -20,7 +20,7 @@ security_list() ->
 run() ->
   try
     io:format("Starting receiver controller ~n"),
-    process_listener_PID() ! {create, receiver_controller, self()},
+%%    process_listener_PID() ! {create, receiver_controller, self()},
     ListenerPID = invoke_receiver(),
     io:format("Starting receiver controller listener at PID : ~p ~n", [ListenerPID]),
     process_listener_PID() ! {create, receiver_controller_listener, ListenerPID},
@@ -36,15 +36,15 @@ run() ->
 terminate() ->
   try
     io:format("Stopping receiver controller ~n"),
-    process_listener_PID() ! {delete, sensor_controller},
+%%    process_listener_PID() ! {delete, receiver_controller},
     io:format("Stopping receiver controller listener ~n"),
-    process_listener_PID() ! {delete, sensor_controller_listener},
+    process_listener_PID() ! {delete, receiver_controller_listener},
     io:format("Stopping receivers~n"),
     receivers_database:terminate_receivers(),
     timer:sleep(timer:seconds(1)),
     start
   catch
-    _:_ -> logger_PID() ! {sensor_controller, "Error while stopping receiver controller ~n"},
+    _:_ -> logger_PID() ! {receiver_controller, "Error while stopping receiver controller ~n"},
       error
   end.
 
@@ -71,6 +71,7 @@ handleRequest([], _) ->
 handleRequest([H | T], Data) ->
   io:format("Handling request for receiver ~s~n", [H]),
   case H of
+    %% TODO: spawn handling process to avoid bottleneck
     smoke_receiver -> handle_smoke_signal(Data);
     phone_notifier -> handle_notification(Data);
     climate_control_receiver -> handle_temperature_signal(Data);
@@ -113,13 +114,14 @@ handle_notification(Data) ->
 
 handle_breach_signal(Data) ->
   Receivers = security_list(),
-  handle_single_breach_signal(Receivers, Data, data_manager:lookup(process_orchestrator:processes_set(), armed)).
+  io:format("Armed state: ~p~n",[data_manager:lookup_state(process_orchestrator:processes_set(), armed)]),
+  handle_single_breach_signal(Receivers, Data, data_manager:lookup_state(process_orchestrator:processes_set(), armed)).
 
 
 handle_single_breach_signal([], _, _) -> ok;
 
 handle_single_breach_signal([{State, Receiver} | T], Data, ArmedState) when ArmedState == off ->
-  ReceiverState = data_manager:lookup(process_orchestrator:processes_set(), State),
+  ReceiverState = data_manager:lookup_state(process_orchestrator:processes_set(), State),
   ReceiverPID = data_manager:lookup(process_orchestrator:processes_set(), Receiver),
   io:format("~p ~p~n", [Receiver, ReceiverState]),
   case ReceiverState of
@@ -162,13 +164,13 @@ handle_single_breach_signal([{State, Receiver} | T], Data, ArmedState) when Arme
 %%  handle_single_breach_signal(T, Data, ArmedState).
 
 handle_arming_signal(Receivers, Data) ->
-  ArmedState = data_manager:lookup(process_orchestrator:processes_set(), armed),
+  ArmedState = data_manager:lookup_state(process_orchestrator:processes_set(), armed),
   handle_single_arm_signal(Receivers, Data, ArmedState).
 
 handle_single_arm_signal([], _, _) -> ok;
 
 handle_single_arm_signal([{State, Receiver} | T], Data, ArmedState) ->
-  ReceiverState = data_manager:lookup(process_orchestrator:processes_set(), State),
+  ReceiverState = data_manager:lookup_state(process_orchestrator:processes_set(), State),
   ReceiverPID = data_manager:lookup(process_orchestrator:processes_set(), Receiver),
   case ArmedState of
     on ->

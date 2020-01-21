@@ -14,7 +14,9 @@ logger_listener() -> logger_listener.
 run() ->
   try
     io:format("Starting logger ~n"),
-    process_listener_PID() ! {create, logger, pid()},
+    io:format("~p ~n",[self()]),
+%%    io:format("~p ~n",[registered()]),
+%%    process_listener_PID() ! {create, logger_manager, pid()},
     ListenerPID = invoke_receiver(),
     io:format("Starting logger listener at PID : ~p ~n", [ListenerPID]),
     process_listener_PID() ! {create, logger_listener, ListenerPID},
@@ -27,8 +29,9 @@ run() ->
 terminate() ->
   try
     io:format("Stopping smoke receiver ~n"),
-    process_listener_PID() ! {delete, smoke_receiver},
-    process_listener_PID() ! {delete, smoke_receiver_listener}
+%%    process_listener_PID() ! {delete, logger_manager},
+    process_listener_PID() ! {delete, logger_listener},
+      io:format("ELO~p",[registered()])
   catch
     error:_ -> log(logger,"Error while terminating alarm!"),
       error

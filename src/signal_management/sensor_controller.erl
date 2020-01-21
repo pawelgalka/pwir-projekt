@@ -20,7 +20,6 @@ sensor_listener() -> sensor_controller_listener.
 run() ->
   try
     io:format("Starting sensor controller ~n"),
-    process_listener_PID() ! {create, sensor_controller, self()},
     ListenerPID = invoke_receiver(),
     io:format("Starting sensor controller listener at PID : ~p ~n", [ListenerPID]),
     process_listener_PID() ! {create, sensor_controller_listener, ListenerPID},
@@ -36,7 +35,6 @@ run() ->
 terminate() ->
   try
     io:format("Stopping sensor controller ~n"),
-    process_listener_PID() ! {delete, sensor_controller},
     io:format("Stopping sensor controller listener ~n"),
     process_listener_PID() ! {delete, sensor_controller_listener},
     io:format("Stopping sensors~n"),

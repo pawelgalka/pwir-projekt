@@ -21,7 +21,7 @@ start_temperature() -> 22.0.
 run() ->
   try
     io:format("Starting temperature sensor ~n"),
-    process_listener_PID() ! {create, temperature_sensor, self()},
+%%    process_listener_PID() ! {create, temperature_sensor, self()},
     Pid = spawn(fun() -> temperature_sensor_receiver() end),
     process_listener_PID() ! {create, temperature_sensor_receiver, Pid},
     Pid ! {on, start_temperature()},
@@ -35,8 +35,8 @@ run() ->
 terminate() ->
   try
     io:format("Stopping temperature sensor ~n"),
-    process_listener_PID() ! {delete, temperature_sensor_receiver},
-    process_listener_PID() ! {delete, temperature_sensor}
+    process_listener_PID() ! {delete, temperature_sensor_receiver}
+%%    process_listener_PID() ! {delete, temperature_sensor}
   catch
     A:B -> io:format("~s~s~n", [A, B]),
       logger_PID() ! {smoke_sensor, "Error while stopping temperature sensor ~n"},

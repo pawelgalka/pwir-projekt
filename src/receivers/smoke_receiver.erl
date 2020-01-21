@@ -17,7 +17,7 @@ receiver_id() -> smoke_receiver_listener.
 run() ->
   try
     io:format("Starting smoke receiver ~n"),
-    process_listener_PID() ! {create, smoke_receiver, self()},
+%%    process_listener_PID() ! {create, smoke_receiver, self()},
     ListenerPID = invoke_receiver(),
     io:format("Starting smoke receiver listener at PID : ~p ~n", [ListenerPID]),
     process_listener_PID() ! {create, smoke_receiver_listener, ListenerPID},
@@ -30,8 +30,8 @@ run() ->
 terminate() ->
   try
     io:format("Stopping smoke receiver ~n"),
-    process_listener_PID() ! {delete, smoke_receiver_listener},
-    process_listener_PID() ! {delete, smoke_receiver}
+    process_listener_PID() ! {delete, smoke_receiver_listener}
+%%    process_listener_PID() ! {delete, smoke_receiver}
   catch
     error:_ -> logger_PID() ! {"Error while terminating alarm!"},
       error

@@ -12,31 +12,33 @@ password() -> "admin".
 gui() ->
   GUI_PID = self(),
   io:format("GUI is initialized ~p~n", [GUI_PID]),
-  ets:insert(process_orchestrator:processes_set(), {guiPID, GUI_PID}),
+%%  ets:insert(process_orchestrator:processes_set(), {guiPID, GUI_PID}),
+  data_manager:create_process(a, guiPID, GUI_PID),
   login_page(GUI_PID).
 
 smart_home_gui() ->
   GUI_PID = self(),
   io:format("GUI smart home is initialized ~p~n", [GUI_PID]),
   Wx = wx:new(),
-  Frame = wxFrame:new(Wx, -1, "Smart Erlang Community Home", [{size, {500, 400}}]),
+  Frame = wxFrame:new(Wx, -1, "Smart Erlang Community Home", [{size, {500, 470}}]),
   Panel = wxPanel:new(Frame),
 
   create_labels(Panel),
-  BlindsText1 = wxStaticText:new(Panel, 14, "Up", [{pos, {50, 150}}]),
-  BlindsText2 = wxStaticText:new(Panel, 14, "Up", [{pos, {135, 150}}]),
-  ClimateText = wxStaticText:new(Panel, 14, "Off", [{pos, {220, 150}}]),
-  OutletText = wxStaticText:new(Panel, 14, "Off", [{pos, {305, 150}}]),
-  SmokeText = wxStaticText:new(Panel, 14, "No", [{pos, {390, 150}}]),
-  TempText = wxStaticText:new(Panel, 14, "22.0 °C", [{pos, {250, 190}}]),
-  PhoneText = wxStaticText:new(Panel, 14, "[SMS]", [{pos, {160, 230}}]),
+  {BlindsText1, BlindsText2, ClimateText, OutletText, SmokeText, TempText, PhoneText} = create_info_fields(Panel),
 
   StartButton = wxButton:new(Panel, 20, [{label, "START"}, {pos, {40, 50}}, {size, {100, 25}}]),
   StopButton = wxButton:new(Panel, 20, [{label, "STOP"}, {pos, {180, 50}}, {size, {100, 25}}]),
   CloseButton = wxButton:new(Panel, 20, [{label, "CLOSE"}, {pos, {320, 50}}, {size, {100, 25}}]),
   LightButton = wxButton:new(Panel, 20, [{label, "SWITCH LIGHTS"}, {pos, {100, 270}}, {size, {100, 50}}]),
   ArmButton = wxButton:new(Panel, 20, [{label, "ARM ALARM"}, {pos, {300, 270}}, {size, {100, 50}}]),
-
+  ChoicesMax = ["23.0", "23.5", "24.0", "24.5", "25.0", "25.5", "26.0"],
+  ChoicesMin = ["19.5", "20.0", "20.5", "21.0", "21.5", "22.0", "22.5"],
+  ChoiceMax = wxChoice:new(Panel, 20, [{pos, {300, 390}}, {size, {100, 50}}, {choices, ChoicesMax}]),
+  ChoiceMin = wxChoice:new(Panel, 20, [{pos, {100, 390}}, {size, {100, 50}}, {choices, ChoicesMin}]),
+  wxChoice:setColumns(ChoiceMax, [{n, 7}]),
+  wxChoice:setColumns(ChoiceMin, [{n, 7}]),
+  wxChoice:setSelection(ChoiceMax, 0),
+  wxChoice:setSelection(ChoiceMin, 0),
   wxButton:connect(CloseButton, command_button_clicked, [{callback,
     fun(_, _) -> GUI_PID ! close end}]),
   wxButton:connect(StartButton, command_button_clicked, [{callback,
@@ -45,7 +47,7 @@ smart_home_gui() ->
     fun(_, _) -> GUI_PID ! stop end}]),
   wxButton:connect(LightButton, command_button_clicked, [{callback,
     fun(_, _) ->
-      State = data_manager:lookup(process_orchestrator:processes_set(), light_state),
+      State = data_manager:lookup_state(process_orchestrator:processes_set(), light_state),
       if State == on ->
         sensor_controller_listener_PID() ! {light_swtich, off};
         true -> sensor_controller_listener_PID() ! {light_swtich, on}
@@ -57,13 +59,29 @@ smart_home_gui() ->
       if State == on ->
         wxButton:setLabel(ArmButton, "ARM ALARM"),
         sensor_controller_listener_PID() ! {armed, off};
-        true -> wxButton:setLabel(ArmButton, "UNARM ALARM"),sensor_controller_listener_PID() ! {armed, on}
+        true -> wxButton:setLabel(ArmButton, "UNARM ALARM"), sensor_controller_listener_PID() ! {armed, on}
       end
 
     end}]),
   wxFrame:show(Frame),
-
+  wxChoice:connect(ChoiceMax, command_choice_selected, [{callback, fun(_, _) ->
+    {Temp, _} = string:to_float(lists:nth(wxChoice:getSelection(ChoiceMax) + 1, ChoicesMax)),
+    io:format("~p~n", [Temp]) end}]),
+  wxChoice:connect(ChoiceMin, command_choice_selected, [{callback, fun(_, _) ->
+    {Temp, _} = string:to_float(lists:nth(wxChoice:getSelection(ChoiceMin) + 1, ChoicesMin)),
+    io:format("~p~n", [Temp]) end}]),
+%%  wxChoice:getSelection(Choice)
   await_start(BlindsText1, BlindsText2, ClimateText, OutletText, SmokeText, TempText, PhoneText).
+
+create_info_fields(Panel) ->
+  BlindsText1 = wxStaticText:new(Panel, 14, "Up", [{pos, {50, 150}}]),
+  BlindsText2 = wxStaticText:new(Panel, 14, "Up", [{pos, {135, 150}}]),
+  ClimateText = wxStaticText:new(Panel, 14, "Off", [{pos, {220, 150}}]),
+  OutletText = wxStaticText:new(Panel, 14, "Off", [{pos, {305, 150}}]),
+  SmokeText = wxStaticText:new(Panel, 14, "No", [{pos, {390, 150}}]),
+  TempText = wxStaticText:new(Panel, 14, "22.0 °C", [{pos, {250, 190}}]),
+  PhoneText = wxStaticText:new(Panel, 14, "[SMS]", [{pos, {160, 230}}]),
+  {BlindsText1, BlindsText2, ClimateText, OutletText, SmokeText, TempText, PhoneText}.
 
 login_page(GUI_PID) ->
   Wx = wx:new(),
@@ -107,7 +125,9 @@ create_labels(Panel) ->
   wxStaticText:new(Panel, 16, "Outlet", [{pos, {305, 125}}, {size, {60, 25}}]),
   wxStaticText:new(Panel, 16, "Smoke", [{pos, {390, 125}}, {size, {60, 25}}]),
   wxStaticText:new(Panel, 16, "House temperature:", [{pos, {140, 190}}, {size, {130, 25}}]),
-  wxStaticText:new(Panel, 16, "Phone:", [{pos, {100, 230}}, {size, {130, 25}}]).
+  wxStaticText:new(Panel, 16, "Phone:", [{pos, {100, 230}}, {size, {130, 25}}]),
+  wxStaticText:new(Panel, 16, "Minimal temperature:", [{pos, {100, 350}}, {size, {130, 25}}]),
+  wxStaticText:new(Panel, 16, "Maximum temperature:", [{pos, {300, 350}}, {size, {130, 25}}]).
 
 await_start(BlindsText1, BlindsText2, ClimateText, OutletText, SmokeText, TempText, PhoneText) ->
   receive
@@ -146,7 +166,7 @@ await_command(BlindsText1, BlindsText2, ClimateText, OutletText, SmokeText, Temp
 
     {smokeOff} -> wxStaticText:setLabel(SmokeText, "No");
 
-    stop -> app_warmup:terminate_app(), ets:insert(process_orchestrator:processes_set(), {guiPID, self()});
+    stop ->  app_warmup:terminate_app();
 
     start -> app_warmup:initiate_app();
 
@@ -155,3 +175,10 @@ await_command(BlindsText1, BlindsText2, ClimateText, OutletText, SmokeText, Temp
     Command -> io:format("Unknown signal ~p~n", [Command])
   end,
   await_command(BlindsText1, BlindsText2, ClimateText, OutletText, SmokeText, TempText, PhoneText).
+
+bin_to_num(Bin) ->
+  N = binary_to_list(Bin),
+  case string:to_float(N) of
+    {error, no_float} -> list_to_integer(N);
+    {F, _Rest} -> F
+  end.
