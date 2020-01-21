@@ -7,17 +7,18 @@
 pid() -> self().
 
 process_listener_PID() ->
-  data_manager:lookup(process_orchestrator:processes_set(), process_orchestrator:process_listener()).
+  data_manager:lookup(process_orchestrator:process_listener()).
 
 logger_PID() ->
-  data_manager:lookup(process_orchestrator:processes_set(), logger_manager:logger_listener()).
+  data_manager:lookup(logger_manager:logger_listener()).
+
+receiver_id() -> electrical_outlet_receiver_listener.
 
 run() ->
   try
     io:format("Starting electrical outlet receiver ~n"),
-    process_listener_PID() ! {create, electrical_outlet_receiver, self()},
     ListenerPID = invoke_receiver(),
-    io:format("Starting electrical outlet receiver listener at PID : ~p ~n",[ListenerPID]),
+    io:format("Starting electrical outlet receiver listener at PID : ~p ~n", [ListenerPID]),
     process_listener_PID() ! {create, electrical_outlet_receiver_listener, ListenerPID},
     start
   catch
@@ -28,29 +29,28 @@ run() ->
 terminate() ->
   try
     io:format("Stopping electrical outlet receiver ~n"),
-    process_listener_PID() ! {delete,process_orchestrator:processes_set(), electrical_outlet_receiver},
-    process_listener_PID() ! {delete,process_orchestrator:processes_set(), electrical_outlet_receiver_listener}
+    process_listener_PID() ! {delete, electrical_outlet_receiver_listener}
   catch
-    error:_ -> logger_PID() ! {electrical_outlet_receiver,"Error while terminating electrical outlet receiver!~n"},
+    error:_ -> logger_PID() ! {electrical_outlet_receiver, "Error while terminating electrical outlet receiver!~n"},
       error
   end.
 
 invoke_receiver() ->
-  spawn(fun() -> spawn(?MODULE, smoke_sensor_receiver(), []) end).
+  spawn(fun() -> spawn(?MODULE, electric_sensor_receiver(), []) end).
 
-smoke_sensor_receiver() ->
+electric_sensor_receiver() ->
   receive
     {on} ->
-      io:format("Turning elecricatl outlet on!"),
-      process_orchestrator:gui_PID() ! outletOn,
-      logger_PID() ! {electrical_outlet_receiver,"Turning elecricatl outlet on!"},
-      smoke_sensor_receiver();
+      io:format("Turning electrical outlet on! ~n"),
+      process_orchestrator:gui_PID() ! {outletOn},
+      logger_PID() ! {electrical_outlet_receiver, "Turning electrical outlet on!"},
+      electric_sensor_receiver();
     {off} ->
-      io:format("Turning elecricatl outlet off!"),
-      process_orchestrator:gui_PID() ! outletOff,
-      logger_PID() ! {electrical_outlet_receiver,"Turning elecricatl outlet off!"},
-      smoke_sensor_receiver();
+      io:format("Turning electrical outlet off! ~n"),
+      process_orchestrator:gui_PID() ! {outletOff},
+      logger_PID() ! {electrical_outlet_receiver, "Turning electrical outlet off!"},
+      electric_sensor_receiver();
     {_} ->
-      smoke_sensor_receiver()
+      electric_sensor_receiver()
   end.
 

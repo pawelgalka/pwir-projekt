@@ -7,20 +7,19 @@
 pid() -> self().
 
 process_listener_PID() ->
-  data_manager:lookup(process_orchestrator:processes_set(), process_orchestrator:process_listener()).
+  data_manager:lookup(process_orchestrator:process_listener()).
 
 logger_PID() ->
-  data_manager:lookup(process_orchestrator:processes_set(), logger_manager:logger_listener()).
+  data_manager:lookup(logger_manager:logger_listener()).
 
 proxy_controller_PID() ->
-  data_manager:lookup(process_orchestrator:processes_set(), signal_proxy:signal_proxy()).
+  data_manager:lookup(signal_proxy:signal_proxy()).
 
 sensor_listener() -> sensor_controller_listener.
 
 run() ->
   try
     io:format("Starting sensor controller ~n"),
-    process_listener_PID() ! {create, sensor_controller, self()},
     ListenerPID = invoke_receiver(),
     io:format("Starting sensor controller listener at PID : ~p ~n", [ListenerPID]),
     process_listener_PID() ! {create, sensor_controller_listener, ListenerPID},
@@ -36,7 +35,6 @@ run() ->
 terminate() ->
   try
     io:format("Stopping sensor controller ~n"),
-    process_listener_PID() ! {delete, sensor_controller},
     io:format("Stopping sensor controller listener ~n"),
     process_listener_PID() ! {delete, sensor_controller_listener},
     io:format("Stopping sensors~n"),
