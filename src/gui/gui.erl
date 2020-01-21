@@ -32,14 +32,7 @@ smart_home_gui() ->
   CloseButton = wxButton:new(Panel, 20, [{label, "CLOSE"}, {pos, {320, 50}}, {size, {100, 25}}]),
   LightButton = wxButton:new(Panel, 20, [{label, "SWITCH LIGHTS"}, {pos, {100, 270}}, {size, {100, 50}}]),
   ArmButton = wxButton:new(Panel, 20, [{label, "ARM ALARM"}, {pos, {300, 270}}, {size, {100, 50}}]),
-  Choices = ["18.5", "19.0", "19.5", "20.0", "20.5", "21.0", "21.5", "22.0", "22.5", "23.0", "23.5", "24.0", "24.5", "25.0", "25.5", "26.0"],
-
-  ChoiceMax = wxChoice:new(Panel, 20, [{pos, {300, 390}}, {size, {100, 50}}, {choices, Choices}]),
-  ChoiceMin = wxChoice:new(Panel, 20, [{pos, {100, 390}}, {size, {100, 50}}, {choices, Choices}]),
-  wxChoice:setColumns(ChoiceMax, [{n, 16}]),
-  wxChoice:setColumns(ChoiceMin, [{n, 16}]),
-  wxChoice:setSelection(ChoiceMax, 11),
-  wxChoice:setSelection(ChoiceMin, 5),
+  {ChoiceMin, ChoiceMax, Choices} = create_choice(Panel),
 
   wxButton:connect(CloseButton, command_button_clicked, [{callback,
     fun(_, _) -> GUI_PID ! close end}]),
@@ -70,14 +63,15 @@ smart_home_gui() ->
   wxChoice:connect(ChoiceMax, command_choice_selected, [{callback, fun(_, _) ->
     {Temp, _} = string:to_float(lists:nth(wxChoice:getSelection(ChoiceMax) + 1, Choices)),
     {Result} = validateTempRange(data_manager:lookup_state(minTemp), Temp),
-    if Result == ok -> wxStaticText:setLabel(Validation, ""), data_manager:create_process(maxTemp, Temp),io:format("ELO"); true ->
+    if Result == ok -> wxStaticText:setLabel(Validation, ""), data_manager:create_process(maxTemp, Temp); true ->
       wxStaticText:setLabel(Validation, "INVALID TEMP RANGE")
     end end}]),
 
   wxChoice:connect(ChoiceMin, command_choice_selected, [{callback, fun(_, _) ->
     {Temp, _} = string:to_float(lists:nth(wxChoice:getSelection(ChoiceMin) + 1, Choices)),
     {Result} = validateTempRange(Temp, data_manager:lookup_state(maxTemp)),
-    if Result == ok -> wxStaticText:setLabel(Validation, ""), data_manager:create_process(minTemp, Temp),io:format("ELO"); true ->
+    io:format("Temp ~p", [Temp]),
+    if Result == ok -> wxStaticText:setLabel(Validation, ""), data_manager:create_process(minTemp, Temp); true ->
       wxStaticText:setLabel(Validation, "INVALID TEMP RANGE")
     end end}]),
 
@@ -87,6 +81,23 @@ validateTempRange(T1, T2) ->
   if T1 < T2 -> {ok};
     true -> {error}
   end.
+
+create_choice(Panel) ->
+  Choices = ["18.5", "19.0", "19.5", "20.0", "20.5", "21.0", "21.5", "22.0", "22.5", "23.0", "23.5", "24.0", "24.5", "25.0", "25.5", "26.0"],
+  ChoiceMax = wxChoice:new(Panel, 20, [{pos, {300, 390}}, {size, {100, 50}}, {choices, Choices}]),
+  ChoiceMin = wxChoice:new(Panel, 20, [{pos, {100, 390}}, {size, {100, 50}}, {choices, Choices}]),
+  wxChoice:setColumns(ChoiceMax, [{n, 16}]),
+  wxChoice:setColumns(ChoiceMin, [{n, 16}]),
+  wxChoice:setSelection(ChoiceMax, last_max_temp()),
+  wxChoice:setSelection(ChoiceMin, last_min_temp()),
+  {ChoiceMin, ChoiceMax, Choices}.
+
+last_min_temp() ->
+  trunc((climate_control:minTemp() - 18.5) * 2).
+
+last_max_temp() ->
+  trunc((climate_control:maxTemp() - 18.5) * 2).
+
 create_info_fields(Panel) ->
   BlindsText1 = wxStaticText:new(Panel, 14, "Up", [{pos, {50, 150}}]),
   BlindsText2 = wxStaticText:new(Panel, 14, "Up", [{pos, {135, 150}}]),

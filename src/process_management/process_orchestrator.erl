@@ -26,6 +26,7 @@ stop() ->
   data_manager:delete_process(process_listener()).
 
 close_app() ->
+  data_manager:save_values(),
   ets:delete(states),
   data_manager:delete_process(guiPID),
   close.

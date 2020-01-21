@@ -4,8 +4,10 @@
 -compile(export_all).
 
 init() -> ets:new(states, [ordered_set, public, named_table]).
-
 lookup(Key) -> whereis(Key).
+
+minTemp() -> lookup_state(minTemp).
+maxTemp() -> lookup_state(maxTemp).
 
 lookup_state(Key) ->
   element(2, hd(ets:lookup(states, Key))).
@@ -23,4 +25,7 @@ delete_process(Key) ->
 close(Container) ->
   ets:delete(Container).
 
-
+save_values() ->
+  {ok, Values} = file:open("init_states.txt", [write]),
+  io:format(Values, "~p ~n~p", [minTemp(), maxTemp()]),
+  file:close(Values).
