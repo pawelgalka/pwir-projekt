@@ -7,13 +7,13 @@
 pid() -> self().
 
 process_listener_PID() ->
-  data_manager:lookup(process_orchestrator:processes_set(), process_orchestrator:process_listener()).
+  data_manager:lookup(process_orchestrator:process_listener()).
 
 logger_PID() ->
-  data_manager:lookup(process_orchestrator:processes_set(), logger_manager:logger_listener()).
+  data_manager:lookup(logger_manager:logger_listener()).
 
 proxy_controller_PID() ->
-  data_manager:lookup(process_orchestrator:processes_set(), signal_proxy:signal_proxy()).
+  data_manager:lookup(signal_proxy:signal_proxy()).
 
 sensor_listener() -> sensor_controller_listener.
 

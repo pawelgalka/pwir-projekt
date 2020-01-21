@@ -4,7 +4,7 @@
 -compile(export_all).
 
 process_listener_PID() ->
-  data_manager:lookup(process_orchestrator:processes_set(), process_orchestrator:process_listener()).
+  data_manager:lookup(process_orchestrator:process_listener()).
 
 start_gui() ->
   process_orchestrator:init(),
@@ -18,10 +18,10 @@ initialize_data() ->
   [Login, Password, MinTemp, MaxTemp] = string:tokens(erlang:binary_to_list(Data), "\r\n"),
   {MinTempValue, _} = string:to_float(MinTemp),
   {MaxTempValue, _} = string:to_float(MaxTemp),
-  data_manager:create_process(process_orchestrator:processes_set(), login, Login),
-  data_manager:create_process(process_orchestrator:processes_set(), password, Password),
-  data_manager:create_process(process_orchestrator:processes_set(), minTemp, MinTempValue),
-  data_manager:create_process(process_orchestrator:processes_set(), maxTemp, MaxTempValue).
+  data_manager:create_process(login, Login),
+  data_manager:create_process(password, Password),
+  data_manager:create_process(minTemp, MinTempValue),
+  data_manager:create_process(maxTemp, MaxTempValue).
 
 initiate_app() ->
   process_orchestrator:invoke_listener(),

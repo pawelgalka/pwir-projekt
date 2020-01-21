@@ -7,17 +7,16 @@
 pid() -> self().
 
 process_listener_PID() ->
-  data_manager:lookup(process_orchestrator:processes_set(), process_orchestrator:process_listener()).
+  data_manager:lookup(process_orchestrator:process_listener()).
 
 logger_PID() ->
-  data_manager:lookup(process_orchestrator:processes_set(), logger_manager:logger_listener()).
+  data_manager:lookup(logger_manager:logger_listener()).
 
 receiver_id() -> phone_notifier_listener.
 
 run() ->
   try
     io:format("Starting notifier ~n"),
-%%    process_listener_PID() ! {create, phone_notifier, self()},
     ListenerPID = invoke_receiver(),
     io:format("Starting notifier listener at PID : ~p ~n", [ListenerPID]),
     process_listener_PID() ! {create, phone_notifier_listener, ListenerPID},
@@ -30,7 +29,6 @@ run() ->
 terminate() ->
   try
     io:format("Stopping notifier ~n"),
-%%    process_listener_PID() ! {delete, phone_notifier},
     process_listener_PID() ! {delete, phone_notifier_listener}
   catch
     error:_ -> logger_PID() ! {"Error while terminating notifier!"},

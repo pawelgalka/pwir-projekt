@@ -6,24 +6,23 @@
 pid() -> self().
 
 process_listener_PID() ->
-  data_manager:lookup(process_orchestrator:processes_set(), process_orchestrator:process_listener()).
+  data_manager:lookup(process_orchestrator:process_listener()).
 
 logger_PID() ->
-  data_manager:lookup(process_orchestrator:processes_set(), logger_manager:logger_listener()).
+  data_manager:lookup(logger_manager:logger_listener()).
 
-temperature_sensor() -> data_manager:lookup(process_orchestrator:processes_set(), temperature_sensor_receiver).
+temperature_sensor() -> data_manager:lookup(temperature_sensor_receiver).
 
-minTemp() -> data_manager:lookup_state(process_orchestrator:processes_set(),minTemp).
-maxTemp() -> data_manager:lookup_state(process_orchestrator:processes_set(),maxTemp).
+minTemp() -> data_manager:lookup_state(minTemp).
+maxTemp() -> data_manager:lookup_state(maxTemp).
 receiver_id() -> climate_control_receiver_listener.
 
 run() ->
   try
     io:format("Starting climate control receiver ~n"),
-%%    process_listener_PID() ! {create, climate_control_receiver, self()},
     ListenerPID = invoke_receiver(),
-    io:format("Starting climate control receiver listener at PID : ~p ~n", [ListenerPID]),
     process_listener_PID() ! {create, climate_control_receiver_listener, ListenerPID},
+    io:format("Started climate control receiver listener at PID : ~p ~n", [ListenerPID]),
     start
   catch
     _:_ -> logger_PID() ! {climate_control_receiver, "Error while creating climate control receiver"},
@@ -34,9 +33,8 @@ terminate() ->
   try
     io:format("Stopping climate control receiver ~n"),
     process_listener_PID() ! {delete, climate_control_receiver_listener}
-%%    process_listener_PID() ! {delete, climate_control_receiver}
   catch
-    error:_ -> logger_PID() ! {"Error while terminating alarm!"},
+    error:_ -> logger_PID() ! {"Error while terminating climate control!"},
       error
   end.
 

@@ -7,17 +7,16 @@
 pid() -> self().
 
 process_listener_PID() ->
-  data_manager:lookup(process_orchestrator:processes_set(), process_orchestrator:process_listener()).
+  data_manager:lookup(process_orchestrator:process_listener()).
 
 logger_PID() ->
-  data_manager:lookup(process_orchestrator:processes_set(), logger_manager:logger_listener()).
+  data_manager:lookup(logger_manager:logger_listener()).
 
 receiver_id() -> electrical_outlet_receiver_listener.
 
 run() ->
   try
     io:format("Starting electrical outlet receiver ~n"),
-%%    process_listener_PID() ! {create, electrical_outlet_receiver, self()},
     ListenerPID = invoke_receiver(),
     io:format("Starting electrical outlet receiver listener at PID : ~p ~n", [ListenerPID]),
     process_listener_PID() ! {create, electrical_outlet_receiver_listener, ListenerPID},
@@ -31,7 +30,6 @@ terminate() ->
   try
     io:format("Stopping electrical outlet receiver ~n"),
     process_listener_PID() ! {delete, electrical_outlet_receiver_listener}
-%%    process_listener_PID() ! {delete, electrical_outlet_receiver}
   catch
     error:_ -> logger_PID() ! {electrical_outlet_receiver, "Error while terminating electrical outlet receiver!~n"},
       error

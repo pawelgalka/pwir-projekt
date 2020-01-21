@@ -4,13 +4,13 @@
 -compile(export_all).
 
 process_listener_PID() ->
-  data_manager:lookup(process_orchestrator:processes_set(), process_orchestrator:process_listener()).
+  data_manager:lookup(process_orchestrator:process_listener()).
 
 logger_PID() ->
-  data_manager:lookup(process_orchestrator:processes_set(), logger_manager:logger_listener()).
+  data_manager:lookup(logger_manager:logger_listener()).
 
 sensor_controller_listener_PID() ->
-  data_manager:lookup(process_orchestrator:processes_set(), sensor_controller:sensor_listener()).
+  data_manager:lookup(sensor_controller:sensor_listener()).
 
 signal_emission_timeout() -> timer:sleep(timer:seconds(6)).
 
@@ -21,14 +21,13 @@ name() -> burglary_alarm.
 run() ->
   try
     io:format("Starting burglary system ~n"),
-%%    process_listener_PID() ! {create, burglary_alarm, pid()},
     Pid1 = spawn(fun() -> burglary_sensor(burglary_alarm_sensor) end),
     process_listener_PID() ! {create, burglary_alarm_sensor, Pid1},
     io:format("Starting burglary sensor 1~n"),
     start
   catch
     A:B -> io:format("~s~s~n", [A, B]),
-      logger_PID() ! {smoke_sensor, "Error while creating bulglary sensor ~n"},
+      logger_PID() ! {burglary_alarm_sensor, "Error while creating bulglary sensor ~n"},
       error
   end.
 
@@ -36,7 +35,6 @@ terminate() ->
   try
     io:format("Stopping burglary system ~n"),
     process_listener_PID() ! {delete, burglary_alarm_sensor}
-%%    process_listener_PID() ! {delete, burglary_alarm}
   catch
     A:B -> io:format("~s~s~n", [A, B]),
       logger_PID() ! {burglary_alarm_sensor, "Error while stopping burglary system ~n"},

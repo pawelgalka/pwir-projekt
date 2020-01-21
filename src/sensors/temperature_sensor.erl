@@ -4,13 +4,13 @@
 -compile(export_all).
 
 process_listener_PID() ->
-  data_manager:lookup(process_orchestrator:processes_set(), process_orchestrator:process_listener()).
+  data_manager:lookup(process_orchestrator:process_listener()).
 
 logger_PID() ->
-  data_manager:lookup(process_orchestrator:processes_set(), logger_manager:logger_listener()).
+  data_manager:lookup(logger_manager:logger_listener()).
 
 sensor_controller_listener_PID() ->
-  data_manager:lookup(process_orchestrator:processes_set(), sensor_controller:sensor_listener()).
+  data_manager:lookup(sensor_controller:sensor_listener()).
 
 signal_emission_timeout() -> timer:sleep(timer:seconds(6)).
 
@@ -21,14 +21,13 @@ start_temperature() -> 22.0.
 run() ->
   try
     io:format("Starting temperature sensor ~n"),
-%%    process_listener_PID() ! {create, temperature_sensor, self()},
     Pid = spawn(fun() -> temperature_sensor_receiver() end),
     process_listener_PID() ! {create, temperature_sensor_receiver, Pid},
     Pid ! {on, start_temperature()},
     start
   catch
     A:B -> io:format("~s~s~n", [A, B]),
-      logger_PID() ! {smoke_sensor, "Error while creating temperature receiver ~n"},
+      logger_PID() ! {temperature_sensor, "Error while creating temperature receiver ~n"},
       error
   end.
 
@@ -36,10 +35,9 @@ terminate() ->
   try
     io:format("Stopping temperature sensor ~n"),
     process_listener_PID() ! {delete, temperature_sensor_receiver}
-%%    process_listener_PID() ! {delete, temperature_sensor}
   catch
     A:B -> io:format("~s~s~n", [A, B]),
-      logger_PID() ! {smoke_sensor, "Error while stopping temperature sensor ~n"},
+      logger_PID() ! {temperature_sensor, "Error while stopping temperature sensor ~n"},
       error
   end.
 

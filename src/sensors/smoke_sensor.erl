@@ -4,13 +4,13 @@
 -compile(export_all).
 
 process_listener_PID() ->
-  data_manager:lookup(process_orchestrator:processes_set(), process_orchestrator:process_listener()).
+  data_manager:lookup(process_orchestrator:process_listener()).
 
 logger_PID() ->
-  data_manager:lookup(process_orchestrator:processes_set(), logger_manager:logger_listener()).
+  data_manager:lookup(logger_manager:logger_listener()).
 
 sensor_controller_listener_PID() ->
-  data_manager:lookup(process_orchestrator:processes_set(), sensor_controller:sensor_listener()).
+  data_manager:lookup(sensor_controller:sensor_listener()).
 
 signal_emission_timeout() -> timer:sleep(timer:seconds(6)).
 

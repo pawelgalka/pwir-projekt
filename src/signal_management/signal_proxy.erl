@@ -7,13 +7,13 @@
 pid() -> self().
 
 process_listener_PID() ->
-  data_manager:lookup(process_orchestrator:processes_set(), process_orchestrator:process_listener()).
+  data_manager:lookup(process_orchestrator:process_listener()).
 
 logger_PID() ->
-  data_manager:lookup(process_orchestrator:processes_set(), logger_manager:logger_listener()).
+  data_manager:lookup(logger_manager:logger_listener()).
 
 receiver_controller_PID() ->
-  data_manager:lookup(process_orchestrator:processes_set(), receiver_controller:listener()).
+  data_manager:lookup(receiver_controller:listener()).
 
 signal_proxy() -> proxy_listener.
 
@@ -21,7 +21,6 @@ run() ->
   try
     io:format("Starting signal proxy ~n"),
     io:format("~p ~n",[self()]),
-%%    process_listener_PID() ! {create, proxy, self()},
     ListenerPID = invoke_receiver(),
     io:format("Starting proxy listener at PID : ~p ~n", [ListenerPID]),
     process_listener_PID() ! {create, proxy_listener, ListenerPID},
@@ -35,7 +34,6 @@ terminate() ->
   try
     io:format("Stopping signal proxy ~n"),
     process_listener_PID() ! {delete, proxy_listener},
-%%    process_listener_PID() ! {delete, proxy},
     stop
   catch
     _:_ -> logger_PID() ! {proxy, "Error while stopping proxy"},

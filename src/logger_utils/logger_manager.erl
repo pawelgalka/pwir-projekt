@@ -7,19 +7,16 @@
 pid() -> self().
 
 process_listener_PID() ->
-  data_manager:lookup(process_orchestrator:processes_set(), process_orchestrator:process_listener()).
+  data_manager:lookup(process_orchestrator:process_listener()).
 
 logger_listener() -> logger_listener.
 
 run() ->
   try
     io:format("Starting logger ~n"),
-    io:format("~p ~n",[self()]),
-%%    io:format("~p ~n",[registered()]),
-%%    process_listener_PID() ! {create, logger_manager, pid()},
     ListenerPID = invoke_receiver(),
-    io:format("Starting logger listener at PID : ~p ~n", [ListenerPID]),
     process_listener_PID() ! {create, logger_listener, ListenerPID},
+    io:format("Logger listener  started at PID : ~p ~n", [ListenerPID]),
     start
   catch
     A:B -> io:format("Error while creating logger ~s~s~n",[A,B]),
@@ -28,11 +25,10 @@ run() ->
 
 terminate() ->
   try
-    io:format("Stopping smoke receiver ~n"),
-%%    process_listener_PID() ! {delete, logger_manager},
+    io:format("Stopping logger ~n"),
     process_listener_PID() ! {delete, logger_listener}
   catch
-    error:_ -> log(logger,"Error while terminating alarm!"),
+    error:_ -> log(logger,"Error while terminating logger!"),
       error
   end.
 

@@ -4,25 +4,27 @@
 -compile(export_all).
 
 sensor_controller_listener_PID() ->
-  data_manager:lookup(process_orchestrator:processes_set(), sensor_controller:sensor_listener()).
+  data_manager:lookup(sensor_controller:sensor_listener()).
 
-login() -> data_manager:lookup_state(process_orchestrator:processes_set(),login).
-password() -> data_manager:lookup_state(process_orchestrator:processes_set(),password).
+login() -> data_manager:lookup_state(login).
+password() -> data_manager:lookup_state(password).
 
 gui() ->
   GUI_PID = self(),
   io:format("GUI is initialized ~p~n", [GUI_PID]),
-  data_manager:create_process(a, guiPID, GUI_PID),
+  data_manager:create_process(guiPID, GUI_PID),
   login_page(GUI_PID).
 
 smart_home_gui() ->
   GUI_PID = self(),
   io:format("GUI smart home is initialized ~p~n", [GUI_PID]),
   Wx = wx:new(),
-  Frame = wxFrame:new(Wx, -1, "Smart Erlang Community Home", [{size, {500, 470}}]),
+  Frame = wxFrame:new(Wx, -1, "Smart Erlang Community Home", [{size, {500, 520}}]),
   Panel = wxPanel:new(Frame),
 
   create_labels(Panel),
+  Validation = wxStaticText:new(Panel, 16, "", [{pos, {200, 430}}, {size, {100, 25}}]),
+
   {BlindsText1, BlindsText2, ClimateText, OutletText, SmokeText, TempText, PhoneText} = create_info_fields(Panel),
 
   StartButton = wxButton:new(Panel, 20, [{label, "START"}, {pos, {40, 50}}, {size, {100, 25}}]),
@@ -30,14 +32,15 @@ smart_home_gui() ->
   CloseButton = wxButton:new(Panel, 20, [{label, "CLOSE"}, {pos, {320, 50}}, {size, {100, 25}}]),
   LightButton = wxButton:new(Panel, 20, [{label, "SWITCH LIGHTS"}, {pos, {100, 270}}, {size, {100, 50}}]),
   ArmButton = wxButton:new(Panel, 20, [{label, "ARM ALARM"}, {pos, {300, 270}}, {size, {100, 50}}]),
-  ChoicesMax = ["23.0", "23.5", "24.0", "24.5", "25.0", "25.5", "26.0"],
-  ChoicesMin = ["19.5", "20.0", "20.5", "21.0", "21.5", "22.0", "22.5"],
-  ChoiceMax = wxChoice:new(Panel, 20, [{pos, {300, 390}}, {size, {100, 50}}, {choices, ChoicesMax}]),
-  ChoiceMin = wxChoice:new(Panel, 20, [{pos, {100, 390}}, {size, {100, 50}}, {choices, ChoicesMin}]),
-  wxChoice:setColumns(ChoiceMax, [{n, 7}]),
-  wxChoice:setColumns(ChoiceMin, [{n, 7}]),
-  wxChoice:setSelection(ChoiceMax, 0),
-  wxChoice:setSelection(ChoiceMin, 0),
+  Choices = ["18.5", "19.0", "19.5", "20.0", "20.5", "21.0", "21.5", "22.0", "22.5", "23.0", "23.5", "24.0", "24.5", "25.0", "25.5", "26.0"],
+
+  ChoiceMax = wxChoice:new(Panel, 20, [{pos, {300, 390}}, {size, {100, 50}}, {choices, Choices}]),
+  ChoiceMin = wxChoice:new(Panel, 20, [{pos, {100, 390}}, {size, {100, 50}}, {choices, Choices}]),
+  wxChoice:setColumns(ChoiceMax, [{n, 16}]),
+  wxChoice:setColumns(ChoiceMin, [{n, 16}]),
+  wxChoice:setSelection(ChoiceMax, 11),
+  wxChoice:setSelection(ChoiceMin, 5),
+
   wxButton:connect(CloseButton, command_button_clicked, [{callback,
     fun(_, _) -> GUI_PID ! close end}]),
   wxButton:connect(StartButton, command_button_clicked, [{callback,
@@ -46,7 +49,7 @@ smart_home_gui() ->
     fun(_, _) -> GUI_PID ! stop end}]),
   wxButton:connect(LightButton, command_button_clicked, [{callback,
     fun(_, _) ->
-      State = data_manager:lookup_state(process_orchestrator:processes_set(), light_state),
+      State = data_manager:lookup_state(light_state),
       if State == on ->
         sensor_controller_listener_PID() ! {light_swtich, off};
         true -> sensor_controller_listener_PID() ! {light_swtich, on}
@@ -54,7 +57,7 @@ smart_home_gui() ->
     end}]),
   wxButton:connect(ArmButton, command_button_clicked, [{callback,
     fun(_, _) ->
-      State = data_manager:lookup(process_orchestrator:processes_set(), armed),
+      State = data_manager:lookup(armed),
       if State == on ->
         wxButton:setLabel(ArmButton, "ARM ALARM"),
         sensor_controller_listener_PID() ! {armed, off};
@@ -62,17 +65,28 @@ smart_home_gui() ->
       end
 
     end}]),
+
   wxFrame:show(Frame),
   wxChoice:connect(ChoiceMax, command_choice_selected, [{callback, fun(_, _) ->
-    {Temp, _} = string:to_float(lists:nth(wxChoice:getSelection(ChoiceMax) + 1, ChoicesMax)),
-    data_manager:create_process(states,maxTemp,Temp),
-    io:format("~p~n", [Temp]) end}]),
+    {Temp, _} = string:to_float(lists:nth(wxChoice:getSelection(ChoiceMax) + 1, Choices)),
+    {Result} = validateTempRange(data_manager:lookup_state(minTemp), Temp),
+    if Result == ok -> wxStaticText:setLabel(Validation, ""), data_manager:create_process(maxTemp, Temp),io:format("ELO"); true ->
+      wxStaticText:setLabel(Validation, "INVALID TEMP RANGE")
+    end end}]),
+
   wxChoice:connect(ChoiceMin, command_choice_selected, [{callback, fun(_, _) ->
-    {Temp, _} = string:to_float(lists:nth(wxChoice:getSelection(ChoiceMin) + 1, ChoicesMin)),
-    data_manager:create_process(states,minTemp,Temp),
-    io:format("~p~n", [Temp]) end}]),
+    {Temp, _} = string:to_float(lists:nth(wxChoice:getSelection(ChoiceMin) + 1, Choices)),
+    {Result} = validateTempRange(Temp, data_manager:lookup_state(maxTemp)),
+    if Result == ok -> wxStaticText:setLabel(Validation, ""), data_manager:create_process(minTemp, Temp),io:format("ELO"); true ->
+      wxStaticText:setLabel(Validation, "INVALID TEMP RANGE")
+    end end}]),
+
   await_start(BlindsText1, BlindsText2, ClimateText, OutletText, SmokeText, TempText, PhoneText).
 
+validateTempRange(T1, T2) ->
+  if T1 < T2 -> {ok};
+    true -> {error}
+  end.
 create_info_fields(Panel) ->
   BlindsText1 = wxStaticText:new(Panel, 14, "Up", [{pos, {50, 150}}]),
   BlindsText2 = wxStaticText:new(Panel, 14, "Up", [{pos, {135, 150}}]),
@@ -166,7 +180,7 @@ await_command(BlindsText1, BlindsText2, ClimateText, OutletText, SmokeText, Temp
 
     {smokeOff} -> wxStaticText:setLabel(SmokeText, "No");
 
-    stop ->  app_warmup:terminate_app();
+    stop -> app_warmup:terminate_app();
 
     start -> app_warmup:initiate_app();
 
