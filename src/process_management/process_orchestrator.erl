@@ -5,7 +5,6 @@
 
 pid() -> self().
 
-%% TODO: migrate processes from ets to erlang
 processes_set() -> states.
 
 process_listener() -> process_listener.
@@ -25,7 +24,7 @@ invoke_listener() ->
 %%  data_manager:lookup(processes_set(), process_listener()).
 
 stop() ->
-  io:format("Process manager is stopped ~p~n", [registered()]),
+  io:format("Process manager is stopped ~p~n", [self()]),
   data_manager:delete_process(a,process_listener()).
 %%  ets:delete(processes_set()),
 %%  ets:new(processes_set(), [ordered_set, public, named_table]),

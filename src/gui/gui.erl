@@ -6,13 +6,12 @@
 sensor_controller_listener_PID() ->
   data_manager:lookup(process_orchestrator:processes_set(), sensor_controller:sensor_listener()).
 
-login() -> "admin".
-password() -> "admin".
+login() -> data_manager:lookup_state(process_orchestrator:processes_set(),login).
+password() -> data_manager:lookup_state(process_orchestrator:processes_set(),password).
 
 gui() ->
   GUI_PID = self(),
   io:format("GUI is initialized ~p~n", [GUI_PID]),
-%%  ets:insert(process_orchestrator:processes_set(), {guiPID, GUI_PID}),
   data_manager:create_process(a, guiPID, GUI_PID),
   login_page(GUI_PID).
 
@@ -66,11 +65,12 @@ smart_home_gui() ->
   wxFrame:show(Frame),
   wxChoice:connect(ChoiceMax, command_choice_selected, [{callback, fun(_, _) ->
     {Temp, _} = string:to_float(lists:nth(wxChoice:getSelection(ChoiceMax) + 1, ChoicesMax)),
+    data_manager:create_process(states,maxTemp,Temp),
     io:format("~p~n", [Temp]) end}]),
   wxChoice:connect(ChoiceMin, command_choice_selected, [{callback, fun(_, _) ->
     {Temp, _} = string:to_float(lists:nth(wxChoice:getSelection(ChoiceMin) + 1, ChoicesMin)),
+    data_manager:create_process(states,minTemp,Temp),
     io:format("~p~n", [Temp]) end}]),
-%%  wxChoice:getSelection(Choice)
   await_start(BlindsText1, BlindsText2, ClimateText, OutletText, SmokeText, TempText, PhoneText).
 
 create_info_fields(Panel) ->

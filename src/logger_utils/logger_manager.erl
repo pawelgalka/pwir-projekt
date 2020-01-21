@@ -30,8 +30,7 @@ terminate() ->
   try
     io:format("Stopping smoke receiver ~n"),
 %%    process_listener_PID() ! {delete, logger_manager},
-    process_listener_PID() ! {delete, logger_listener},
-      io:format("ELO~p",[registered()])
+    process_listener_PID() ! {delete, logger_listener}
   catch
     error:_ -> log(logger,"Error while terminating alarm!"),
       error

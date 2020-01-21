@@ -72,12 +72,12 @@ handleRequest([H | T], Data) ->
   io:format("Handling request for receiver ~s~n", [H]),
   case H of
     %% TODO: spawn handling process to avoid bottleneck
-    smoke_receiver -> handle_smoke_signal(Data);
-    phone_notifier -> handle_notification(Data);
-    climate_control_receiver -> handle_temperature_signal(Data);
-    security -> handle_breach_signal(Data);
-    arming -> handle_arming_signal(security_list(), Data);
-    electrical_outlet_receiver -> handle_light_signal(Data);
+    smoke_receiver -> spawn(?MODULE, handle_smoke_signal, [Data]);
+    phone_notifier -> spawn(?MODULE,handle_notification, [Data]);
+    climate_control_receiver -> spawn(?MODULE,handle_temperature_signal, [Data]);
+    security -> spawn(?MODULE,handle_breach_signal, [Data]);
+    arming -> spawn(?MODULE,handle_arming_signal,[security_list(), Data]);
+    electrical_outlet_receiver -> spawn(?MODULE,handle_light_signal,[Data]);
     _ -> nic
   end,
   handleRequest(T, Data).
@@ -143,25 +143,6 @@ handle_single_breach_signal([{State, Receiver} | T], Data, ArmedState) when Arme
   handle_single_breach_signal(T, Data, ArmedState);
 
 handle_single_breach_signal([{State, Receiver} | T], Data, ArmedState) when ArmedState == on -> ok.
-%%  ReceiverState = data_manager:lookup(process_orchestrator:processes_set(), State),
-%%  io:format("~p ~p~n", [Receiver, ReceiverState]),
-%%  case ReceiverState of
-%%    up ->
-%%      case Data of
-%%        danger ->
-%%          ets:delete(process_orchestrator:processes_set(), State),
-%%          ets:insert(process_orchestrator:processes_set(), {State, down});
-%%        safe -> ok
-%%      end;
-%%    down ->
-%%      case Data of
-%%        danger -> ok;
-%%        safe ->
-%%          ets:delete(process_orchestrator:processes_set(), State),
-%%          ets:insert(process_orchestrator:processes_set(), {State, up})
-%%      end
-%%  end,
-%%  handle_single_breach_signal(T, Data, ArmedState).
 
 handle_arming_signal(Receivers, Data) ->
   ArmedState = data_manager:lookup_state(process_orchestrator:processes_set(), armed),

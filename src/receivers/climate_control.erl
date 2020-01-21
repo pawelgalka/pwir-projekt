@@ -13,7 +13,8 @@ logger_PID() ->
 
 temperature_sensor() -> data_manager:lookup(process_orchestrator:processes_set(), temperature_sensor_receiver).
 
-
+minTemp() -> data_manager:lookup_state(process_orchestrator:processes_set(),minTemp).
+maxTemp() -> data_manager:lookup_state(process_orchestrator:processes_set(),maxTemp).
 receiver_id() -> climate_control_receiver_listener.
 
 run() ->
@@ -48,7 +49,8 @@ climate_control_sensor_receiver() ->
       io:format("Climate control sensor received climate control on information! ~p~n", [Temp]),
       process_orchestrator:gui_PID() ! {climateOn},
       logger_PID() ! {climate_control_receiver, "Climate control sensor received climate control on information!"},
-      if Temp < 20 ->
+      MinTemp = minTemp(),
+      if Temp < MinTemp ->
         temperature_sensor() ! {off, Temp},
         climate_control_sensor_receiver();
         true ->
@@ -59,7 +61,8 @@ climate_control_sensor_receiver() ->
       io:format("Climate control sensor received climate control off information! ~p~n", [Temp]),
       process_orchestrator:gui_PID() ! {climateOff},
       logger_PID() ! {climate_control_receiver, "Climate control sensor received climate control off information!"},
-      if Temp > 25 ->
+      MaxTemp = maxTemp(),
+      if Temp > MaxTemp ->
         temperature_sensor() ! {on, Temp},
         climate_control_sensor_receiver();
         true ->
