@@ -19,7 +19,7 @@ smart_home_gui() ->
   GUI_PID = self(),
   io:format("GUI smart home is initialized ~p~n", [GUI_PID]),
   Wx = wx:new(),
-  Frame = wxFrame:new(Wx, -1, "Smart Erlang Community Home", [{size, {500, 520}}]),
+  Frame = wxFrame:new(Wx, -1, "Smart Erlang Community Home", [{size, {500, 600}}]),
   Panel = wxPanel:new(Frame),
 
   create_labels(Panel),
@@ -32,6 +32,7 @@ smart_home_gui() ->
   CloseButton = wxButton:new(Panel, 20, [{label, "CLOSE"}, {pos, {320, 50}}, {size, {100, 25}}]),
   LightButton = wxButton:new(Panel, 20, [{label, "SWITCH LIGHTS"}, {pos, {100, 270}}, {size, {100, 50}}]),
   ArmButton = wxButton:new(Panel, 20, [{label, "ARM ALARM"}, {pos, {300, 270}}, {size, {100, 50}}]),
+  AddAlarmButton = wxButton:new(Panel, 20, [{label, "ADD ALARM"}, {pos, {300, 480}}, {size, {100, 50}}]),
   {ChoiceMin, ChoiceMax, Choices} = create_choice(Panel),
 
   wxButton:connect(CloseButton, command_button_clicked, [{callback,
@@ -40,6 +41,7 @@ smart_home_gui() ->
     fun(_, _) -> GUI_PID ! start end}]),
   wxButton:connect(StopButton, command_button_clicked, [{callback,
     fun(_, _) -> GUI_PID ! stop end}]),
+
   wxButton:connect(LightButton, command_button_clicked, [{callback,
     fun(_, _) ->
       State = data_manager:lookup_state(light_state),
@@ -56,7 +58,10 @@ smart_home_gui() ->
         sensor_controller_listener_PID() ! {armed, off};
         true -> wxButton:setLabel(ArmButton, "UNARM ALARM"), sensor_controller_listener_PID() ! {armed, on}
       end
-
+    end}]),
+  wxButton:connect(AddAlarmButton, command_button_clicked, [{callback,
+    fun(_, _) -> spawn(fun() ->
+      burglary_alarm:run(burglary_alarm:runNewBurglarySensor()) end)
     end}]),
 
   wxFrame:show(Frame),
@@ -152,7 +157,8 @@ create_labels(Panel) ->
   wxStaticText:new(Panel, 16, "House temperature:", [{pos, {140, 190}}, {size, {130, 25}}]),
   wxStaticText:new(Panel, 16, "Phone:", [{pos, {100, 230}}, {size, {130, 25}}]),
   wxStaticText:new(Panel, 16, "Minimal temperature:", [{pos, {100, 350}}, {size, {130, 25}}]),
-  wxStaticText:new(Panel, 16, "Maximum temperature:", [{pos, {300, 350}}, {size, {130, 25}}]).
+  wxStaticText:new(Panel, 16, "Maximum temperature:", [{pos, {300, 350}}, {size, {130, 25}}]),
+  wxStaticText:new(Panel, 16, "Alarm Controller:", [{pos, {50, 480}}, {size, {30, 25}}]).
 
 await_start(BlindsText1, BlindsText2, ClimateText, OutletText, SmokeText, TempText, PhoneText) ->
   receive

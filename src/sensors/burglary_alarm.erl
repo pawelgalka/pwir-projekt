@@ -4,13 +4,13 @@
 -compile(export_all).
 
 process_listener_PID() ->
-  data_manager:lookup(process_orchestrator:process_listener()).
+  data_manager:lookup(process_orchestrator:processes_set(), process_orchestrator:process_listener()).
 
 logger_PID() ->
-  data_manager:lookup(logger_manager:logger_listener()).
+  data_manager:lookup(process_orchestrator:processes_set(), logger_manager:logger_listener()).
 
 sensor_controller_listener_PID() ->
-  data_manager:lookup(sensor_controller:sensor_listener()).
+  data_manager:lookup(process_orchestrator:processes_set(), sensor_controller:sensor_listener()).
 
 signal_emission_timeout() -> timer:sleep(timer:seconds(6)).
 
@@ -21,6 +21,7 @@ name() -> burglary_alarm.
 run() ->
   try
     io:format("Starting burglary system ~n"),
+    process_listener_PID() ! {create, burglary_alarm},
     Pid1 = spawn(fun() -> burglary_sensor(burglary_alarm_sensor) end),
     process_listener_PID() ! {create, burglary_alarm_sensor, Pid1},
     io:format("Starting burglary sensor 1~n"),
@@ -31,6 +32,13 @@ run() ->
       error
   end.
 
+runNewBurglarySensor(Id) ->
+%%  io:format("Starting new burglary system, Id = ~p ~n", element(1, Id)),
+  Pid1 = spawn(fun() -> burglary_sensor(burglary_alarm_sensor) end),
+  register(list_to_atom("burglary_alarm_sensor" ++ string:to_lower(element(1, Id))), Pid1),
+  io:format("Starting burglary sensor 1~n"),
+  start.
+
 terminate() ->
   try
     io:format("Stopping burglary system ~n"),
@@ -40,6 +48,7 @@ terminate() ->
       logger_PID() ! {burglary_alarm_sensor, "Error while stopping burglary system ~n"},
       error
   end.
+
 
 burglary_sensor(Param) ->
   Random_output = rand:uniform(10),

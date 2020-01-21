@@ -17,6 +17,15 @@ create_process(Name, Key) ->
     true -> ets:insert(states, {Name, Key})
   end.
 
+create_alarm_counter() ->
+  ets:insert(states, {alarm_counter, 1}).
+
+update_alarm_counter() ->
+  ABC = lookup_state(alarm_counter),
+  ets:delete(states, alarm_counter),
+  ets:insert(states, {alarm_counter, ABC + 1}),
+  {ABC + 1}.
+
 delete_process(Key) ->
   PID = lookup(Key),
   io:format("Data Manager is killing process ~p ~p~n", [Key, PID]),
