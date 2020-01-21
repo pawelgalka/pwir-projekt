@@ -82,7 +82,7 @@ smart_home_gui() ->
       wxStaticText:setLabel(Validation, "INVALID TEMP RANGE")
     end end}]),
 
-  await_start(BlindsText1, BlindsText2, ClimateText, OutletText, SmokeText, TempText, PhoneText).
+  await_start(BlindsText1, BlindsText2, ClimateText, OutletText, SmokeText, TempText, PhoneText, AlarmCounter).
 
 validateTempRange(T1, T2) ->
   if T1 < T2 -> {ok};
@@ -160,14 +160,14 @@ create_labels(Panel) ->
   wxStaticText:new(Panel, 16, "Minimal temperature:", [{pos, {100, 350}}, {size, {130, 25}}]),
   wxStaticText:new(Panel, 16, "Maximum temperature:", [{pos, {300, 350}}, {size, {130, 25}}]).
 
-await_start(BlindsText1, BlindsText2, ClimateText, OutletText, SmokeText, TempText, PhoneText) ->
+await_start(BlindsText1, BlindsText2, ClimateText, OutletText, SmokeText, TempText, PhoneText, AlarmCounter) ->
   receive
     start -> app_warmup:initiate_app();
     close -> wx:destroy(), process_orchestrator:close_app()
   end,
-  await_command(BlindsText1, BlindsText2, ClimateText, OutletText, SmokeText, TempText, PhoneText).
+  await_command(BlindsText1, BlindsText2, ClimateText, OutletText, SmokeText, TempText, PhoneText, AlarmCounter).
 
-await_command(BlindsText1, BlindsText2, ClimateText, OutletText, SmokeText, TempText, PhoneText) ->
+await_command(BlindsText1, BlindsText2, ClimateText, OutletText, SmokeText, TempText, PhoneText, AlarmCounter) ->
   receive
     {blind_receiver_listener1, blindDown} -> wxStaticText:setLabel(BlindsText1, "Down");
 
@@ -197,7 +197,7 @@ await_command(BlindsText1, BlindsText2, ClimateText, OutletText, SmokeText, Temp
 
     {smokeOff} -> wxStaticText:setLabel(SmokeText, "No");
 
-    stop -> app_warmup:terminate_app();
+    stop -> app_warmup:terminate_app(), wxStaticText:setLabel(AlarmCounter, "Alarm Controller: 1");
 
     start -> app_warmup:initiate_app();
 
@@ -205,7 +205,7 @@ await_command(BlindsText1, BlindsText2, ClimateText, OutletText, SmokeText, Temp
 
     Command -> io:format("Unknown signal ~p~n", [Command])
   end,
-  await_command(BlindsText1, BlindsText2, ClimateText, OutletText, SmokeText, TempText, PhoneText).
+  await_command(BlindsText1, BlindsText2, ClimateText, OutletText, SmokeText, TempText, PhoneText, AlarmCounter).
 
 bin_to_num(Bin) ->
   N = binary_to_list(Bin),
