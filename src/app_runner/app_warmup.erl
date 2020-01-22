@@ -22,7 +22,7 @@ initialize_data() ->
   data_manager:create_process(maxTemp, element(1, MaxTempValue)).
 
 resolve_user_data() ->
-  {ok, Data} = file:read_file("user_data_base"),
+  {ok, Data} = file:read_file("user_data_base.txt"),
   [Login, Password] = string:tokens(erlang:binary_to_list(Data), "\r\n"),
   {Login, Password}.
 

@@ -48,7 +48,7 @@ climate_control_sensor_receiver() ->
       process_orchestrator:gui_PID() ! {climateOn},
       logger_PID() ! {climate_control_receiver, "Climate control sensor received climate control on information!"},
       MinTemp = minTemp(),
-      if Temp < MinTemp ->
+      if Temp =< MinTemp ->
         temperature_sensor() ! {off, Temp},
         climate_control_sensor_receiver();
         true ->
@@ -60,7 +60,7 @@ climate_control_sensor_receiver() ->
       process_orchestrator:gui_PID() ! {climateOff},
       logger_PID() ! {climate_control_receiver, "Climate control sensor received climate control off information!"},
       MaxTemp = maxTemp(),
-      if Temp > MaxTemp ->
+      if Temp >= MaxTemp ->
         temperature_sensor() ! {on, Temp},
         climate_control_sensor_receiver();
         true ->
